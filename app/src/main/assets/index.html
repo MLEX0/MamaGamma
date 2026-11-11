@@ -19,9 +19,11 @@
         <div class="topbar-inner">
             <div class="brand"><img class="brand-icon" src="brand.svg" alt="">Mama Gamma</div>
             <div class="topbar-actions">
-                <button id="history-open" class="settings-open" type="button" aria-haspopup="dialog">История</button>
-                <button id="settings-open" class="settings-open" type="button" aria-haspopup="dialog">
-                    <span class="settings-icon" aria-hidden="true"><i></i><i></i></span>Настройки
+                <button id="settings-open" class="settings-open" type="button" aria-haspopup="dialog" aria-label="Настройки">
+                    <span class="settings-icon" aria-hidden="true"><i></i><i></i></span><span class="settings-label">Настройки</span>
+                </button>
+                <button id="history-open" class="history-open" type="button" aria-haspopup="dialog">
+                    <span class="history-icon" aria-hidden="true"></span><span class="history-label">История</span>
                 </button>
             </div>
         </div>
@@ -137,7 +139,6 @@
             </div>
             <button id="detail-hide-controls" class="secondary-button" type="button">Только гриф</button>
         </header>
-        <button id="detail-show-controls" class="detail-show-controls" type="button" aria-label="Показать элементы управления" hidden>⋯</button>
         <div class="detail-content">
             <section class="board detail-board" id="detail-board" aria-labelledby="detail-board-title" data-fret-range>
                 <div class="board-header">
@@ -159,6 +160,7 @@
                 </div>
                 <div class="fretboard" role="group" aria-label="Гриф гаммы">
                     <div class="strings" aria-hidden="true"></div>
+                    <button id="detail-show-controls" class="detail-show-controls" type="button" aria-label="Показать элементы управления" hidden></button>
                     <div class="fret-scroll"><div class="frets"></div></div>
                 </div>
                 <ul class="legend" aria-label="Обозначения">

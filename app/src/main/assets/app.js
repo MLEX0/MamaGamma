@@ -62,6 +62,8 @@ let notesHistoryTimer = null;
 let chordMatches = session.chordAnalyzed ? ChordFinder.match(ChordFinder.parse(session.chordText).chords) : [];
 let matches = [];
 let activeScale = null;
+let volumePreviewScale = null;
+let volumePreviewDegree = 0;
 let showAll = false;
 let finderPosition = 0;
 let detailOpener = null;
@@ -642,7 +644,16 @@ function refreshSetup(resetScroll) {
 }
 
 function previewVolume() {
-    NoteAudio.play(FretSettings.setup().midi[0]);
+    if (!FretSettings.soundEnabled() || FretSettings.noteVolume() === 0) return;
+    const scale = activeScale || scaleCatalog.get("0-major");
+    if (volumePreviewScale !== scale.id) {
+        volumePreviewScale = scale.id;
+        volumePreviewDegree = 0;
+    }
+    const pitch = scale.pitches[volumePreviewDegree];
+    const interval = (pitch - scale.root + 12) % 12;
+    NoteAudio.play(60 + scale.root + interval);
+    volumePreviewDegree = (volumePreviewDegree + 1) % scale.pitches.length;
 }
 
 for (const dialog of document.querySelectorAll("dialog")) {

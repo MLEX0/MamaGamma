@@ -36,6 +36,8 @@ const SearchHistory = (() => {
 
     function add(source, input, scales) {
         if (!scales.length) return;
+        const previous = entries[0];
+        if ((source === "notes" || source === "chords") && previous?.source === source && previous.input === input) return;
         entries.unshift({ source, input, time: Date.now(), scales: scales.slice(0, 3).map(scale => scale.id) });
         if (entries.length > limit) entries.pop();
         persist();
