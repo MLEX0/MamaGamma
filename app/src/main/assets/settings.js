@@ -8,46 +8,52 @@ const FretSettings = (() => {
     const maxFrets = 36;
 
     function preset(id, name, notes) {
-        return { id, name, pitches: notes.split(" ").reverse().map(note => pitchNames.indexOf(note)) };
+        const midi = notes.split(" ").reverse().map(note => {
+            const octave = Number(note.slice(-1));
+            return 12 * (octave + 1) + pitchNames.indexOf(note.slice(0, -1));
+        });
+        return { id, name, midi, pitches: midi.map(note => note % 12) };
     }
 
     // Presets are written in physical order, from the last string to the first.
     const instruments = [
         {
-            id: "guitar", name: "Гитара", title: "Гитарный гриф", defaultFrets: 24,
+            id: "guitar", name: "Гитара", title: "Гитарный гриф",
             tunings: [
-                preset("standard", "Стандартный", "E A D G B E"),
-                preset("drop-d", "Drop D", "D A D G B E"),
-                preset("d-standard", "D Standard", "D G C F A D"),
-                preset("open-g", "Open G", "D G D G B D"),
-                preset("open-d", "Open D", "D A D F♯ A D"),
-                preset("dadgad", "DADGAD", "D A D G A D"),
+                preset("standard", "Стандартный", "E2 A2 D3 G3 B3 E4"),
+                preset("drop-d", "Drop D", "D2 A2 D3 G3 B3 E4"),
+                preset("d-standard", "D Standard", "D2 G2 C3 F3 A3 D4"),
+                preset("open-g", "Open G", "D2 G2 D3 G3 B3 D4"),
+                preset("open-d", "Open D", "D2 A2 D3 F♯3 A3 D4"),
+                preset("dadgad", "DADGAD", "D2 A2 D3 G3 A3 D4"),
             ],
         },
         {
-            id: "bass", name: "Бас-гитара", title: "Бас-гитара", defaultFrets: 24,
+            id: "bass", name: "Бас-гитара", title: "Бас-гитара",
             tunings: [
-                preset("standard", "Стандартный", "E A D G"),
-                preset("drop-d", "Drop D", "D A D G"),
-                preset("d-standard", "D Standard", "D G C F"),
+                preset("standard", "Стандартный", "E1 A1 D2 G2"),
+                preset("drop-d", "Drop D", "D1 A1 D2 G2"),
+                preset("d-standard", "D Standard", "D1 G1 C2 F2"),
             ],
         },
         {
-            id: "ukulele", name: "Укулеле", title: "Укулеле", defaultFrets: 18,
+            id: "ukulele", name: "Укулеле", title: "Укулеле",
             tunings: [
-                preset("standard", "Стандартный", "G C E A"),
-                preset("baritone", "Баритон", "D G B E"),
+                preset("standard", "Стандартный", "G4 C4 E4 A4"),
+                preset("baritone", "Баритон", "D3 G3 B3 E4"),
             ],
         },
         {
-            id: "mandolin", name: "Мандолина", title: "Мандолина", defaultFrets: 20, courses: true,
-            tunings: [preset("standard", "Стандартный", "G D A E")],
+            id: "mandolin", name: "Мандолина", title: "Мандолина", courses: true,
+            tunings: [preset("standard", "Стандартный", "G3 D4 A4 E5")],
         },
     ];
 
-    const dialog = document.getElementById("settings-dialog");
-    const open = document.getElementById("settings-open");
     const themeOptions = document.getElementById("theme-options");
+    const soundSwitch = document.getElementById("note-sound");
+    const volumeSlider = document.getElementById("note-volume");
+    const volumeValue = document.getElementById("note-volume-value");
+    const previewButton = document.getElementById("note-preview");
     const instrumentPicker = document.getElementById("instrument-picker");
     const tuningPicker = document.getElementById("tuning-picker");
     const stringTuning = document.getElementById("string-tuning");
@@ -57,7 +63,7 @@ const FretSettings = (() => {
     const more = document.getElementById("length-more");
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
     const appearance = window.GammaMamaAppearance;
-    const state = restore();
+    let state = restore();
 
     function restore() {
         let saved;
@@ -67,8 +73,11 @@ const FretSettings = (() => {
             // The settings still work if local storage is unavailable.
         }
         saved = saved || {};
+        return readSettings(saved, appearance ? appearance.themeMode() : saved.theme);
+    }
+
+    function readSettings(saved, theme) {
         const instrument = instruments.find(item => item.id === saved.instrument) || instruments[0];
-        const theme = appearance ? appearance.themeMode() : saved.theme;
         const setups = {};
         instruments.forEach(item => {
             const previous = saved.setups && saved.setups[item.id] || {};
@@ -81,10 +90,11 @@ const FretSettings = (() => {
             setups[item.id] = {
                 tuning: previous.tuning === "custom" && validCustom ? "custom" : (known || standard).id,
                 customPitches: validCustom ? customPitches : null,
-                frets: validFrets ? previous.frets : item.defaultFrets,
+                frets: validFrets ? previous.frets : minFrets,
             };
         });
-        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", setups };
+        const volume = Number.isInteger(saved.volume) && saved.volume >= 0 && saved.volume <= 100 ? saved.volume : 100;
+        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", sound: saved.sound !== false, volume, setups };
     }
 
     function persist() {
@@ -105,8 +115,22 @@ const FretSettings = (() => {
 
     function setup() {
         const { tuning, customPitches, frets } = profile();
-        const pitches = tuning === "custom" ? customPitches : instrument().tunings.find(item => item.id === tuning).pitches;
-        return { pitches, frets };
+        const tunings = instrument().tunings;
+        if (tuning !== "custom") {
+            const { pitches, midi } = tunings.find(item => item.id === tuning);
+            return { pitches, midi, frets };
+        }
+        // Custom tuning stores pitch classes. Use the nearest pitch to each standard open string.
+        const midi = tunings[0].midi.map((note, index) => note + (customPitches[index] - note % 12 + 18) % 12 - 6);
+        return { pitches: customPitches, midi, frets };
+    }
+
+    function soundEnabled() {
+        return state.sound;
+    }
+
+    function noteVolume() {
+        return state.volume / 100;
     }
 
     function applyTheme() {
@@ -156,18 +180,60 @@ const FretSettings = (() => {
         renderFrets();
     }
 
-    function init(onSetupChange) {
+    function renderVolume() {
+        volumeSlider.value = state.volume;
+        volumeSlider.disabled = !state.sound;
+        previewButton.disabled = !state.sound || state.volume === 0;
+        volumeSlider.setAttribute("aria-valuetext", `${state.volume}%`);
+        volumeValue.value = `${state.volume}%`;
+    }
+
+    function renderSettings() {
         applyTheme();
-        if (!appearance && systemTheme.addEventListener) systemTheme.addEventListener("change", applyTheme);
         themeOptions.querySelector(`input[value="${state.theme}"]`).checked = true;
+        soundSwitch.checked = state.sound;
+        renderVolume();
+        instrumentPicker.value = state.instrument;
+        renderSetup();
+    }
+
+    function reset() {
+        state = readSettings({}, "system");
+        renderSettings();
+        persist();
+    }
+
+    function init(onSetupChange, onSoundChange, onVolumeChange, onPreview) {
+        if (!appearance && systemTheme.addEventListener) systemTheme.addEventListener("change", applyTheme);
+        if (appearance && typeof appearance.appVersion === "function") {
+            const version = document.getElementById("app-version");
+            version.textContent = `Версия ${appearance.appVersion()}`;
+            version.hidden = false;
+        }
         themeOptions.addEventListener("change", event => {
             state.theme = event.target.value;
             applyTheme();
             persist();
         });
 
+        soundSwitch.addEventListener("change", () => {
+            state.sound = soundSwitch.checked;
+            renderVolume();
+            persist();
+            onSoundChange(state.sound);
+        });
+        volumeSlider.addEventListener("input", () => {
+            state.volume = volumeSlider.valueAsNumber;
+            renderVolume();
+            onVolumeChange();
+        });
+        volumeSlider.addEventListener("change", () => {
+            persist();
+            if (state.volume > 0) onPreview();
+        });
+        previewButton.addEventListener("click", onPreview);
+
         options(instrumentPicker, instruments);
-        instrumentPicker.value = state.instrument;
         instrumentPicker.addEventListener("change", () => {
             state.instrument = instrumentPicker.value;
             renderSetup();
@@ -217,14 +283,8 @@ const FretSettings = (() => {
         });
         less.addEventListener("click", () => setFrets(profile().frets - 1));
         more.addEventListener("click", () => setFrets(profile().frets + 1));
-        open.addEventListener("click", () => dialog.showModal());
-        document.getElementById("settings-close").addEventListener("click", () => dialog.close());
-        document.getElementById("settings-done").addEventListener("click", () => dialog.close());
-        dialog.addEventListener("click", event => {
-            if (event.target === dialog) dialog.close();
-        });
-        renderSetup();
+        renderSettings();
     }
 
-    return { instrument, setup, init };
+    return { instrument, setup, soundEnabled, noteVolume, init, reset };
 })();

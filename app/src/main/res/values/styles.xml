@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="mama_gamma_icon_background">#292146</color>
     <style name="GammamaBaseTheme" parent="android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">#F3F4E9</item>
-        <item name="android:statusBarColor">#F3F4E9</item>
+        <item name="android:windowBackground">#F6F4FA</item>
+        <item name="android:statusBarColor">#F6F4FA</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:colorAccent">#4B681E</item>
+        <item name="android:colorAccent">#6046A2</item>
     </style>
     <style name="GammamaTheme" parent="GammamaBaseTheme">
-        <item name="android:navigationBarColor">#243B2A</item>
+        <item name="android:navigationBarColor">#292146</item>
     </style>
     <style name="GammamaDarkControls" parent="android:style/Theme.Material.NoActionBar">
-        <item name="android:colorAccent">#9BEAD8</item>
+        <item name="android:colorAccent">#C9B9FF</item>
     </style>
 </resources>

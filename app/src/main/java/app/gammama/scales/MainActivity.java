@@ -1,12 +1,18 @@
 package app.gammama.scales;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,20 +27,29 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.window.OnBackInvokedDispatcher;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 public final class MainActivity extends Activity {
     private static final String ORIGIN = "https://appassets.androidplatform.net";
     private static final String INDEX = ORIGIN + "/index.html";
-    private static final int LIGHT_BACKGROUND = Color.rgb(243, 244, 233);
-    private static final int DARK_BACKGROUND = Color.rgb(16, 19, 25);
+    private static final int LIGHT_BACKGROUND = Color.rgb(246, 244, 250);
+    private static final int DARK_BACKGROUND = Color.rgb(19, 18, 27);
     private static final String THEME = "theme";
 
     private FrameLayout frame;
     private ContextThemeWrapper webContext;
     private WebView webView;
+    private boolean scaleFullscreen;
+    private int orientationBeforeFullscreen;
+    private AudioSearch audioSearch;
+    private boolean audioPageReady;
+    private Intent pendingAudioShare;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +76,8 @@ public final class MainActivity extends Activity {
         webView.getSettings().setAllowContentAccess(false);
         webView.getSettings().setBlockNetworkLoads(true);
         webView.addJavascriptInterface(new AppearanceBridge(), "GammaMamaAppearance");
+        audioSearch = new AudioSearch(this, this::sendAudioState);
+        webView.addJavascriptInterface(new AudioBridge(), "MamaGammaAudio");
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
@@ -94,7 +111,46 @@ public final class MainActivity extends Activity {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
         }
+        if (savedInstanceState == null) receiveAudioShare(getIntent());
         webView.loadUrl(INDEX);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        receiveAudioShare(intent);
+    }
+
+    private void receiveAudioShare(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction())) return;
+        pendingAudioShare = intent;
+        openPendingAudioShare();
+    }
+
+    private void openPendingAudioShare() {
+        if (!audioPageReady || pendingAudioShare == null) return;
+        Intent share = pendingAudioShare;
+        pendingAudioShare = null;
+        webView.evaluateJavascript("openSharedAudio();", null);
+        audioSearch.analyzeSharedFile(sharedContentUri(share));
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Uri sharedContentUri(Intent share) {
+        try {
+            Parcelable stream = share.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (stream instanceof Uri && ContentResolver.SCHEME_CONTENT.equals(((Uri) stream).getScheme())) {
+                return (Uri) stream;
+            }
+            ClipData clip = share.getClipData();
+            if (clip != null && clip.getItemCount() > 0) {
+                Uri uri = clip.getItemAt(0).getUri();
+                if (uri != null && ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) return uri;
+            }
+        } catch (RuntimeException ignored) {
+            // Treat malformed extras from another app as an unreadable share.
+        }
+        return null;
     }
 
     private boolean systemDark() {
@@ -137,6 +193,11 @@ public final class MainActivity extends Activity {
 
     public final class AppearanceBridge {
         @JavascriptInterface
+        public String appVersion() {
+            return BuildConfig.VERSION_NAME;
+        }
+
+        @JavascriptInterface
         public String themeMode() {
             return getPreferences(MODE_PRIVATE).getString(THEME, "system");
         }
@@ -159,9 +220,76 @@ public final class MainActivity extends Activity {
         @JavascriptInterface
         public void setScaleFullscreen(boolean fullscreen) {
             runOnUiThread(() -> {
-                if (!isDestroyed()) applyFullscreen(fullscreen);
+                if (isDestroyed() || scaleFullscreen == fullscreen) return;
+                scaleFullscreen = fullscreen;
+                if (fullscreen) {
+                    orientationBeforeFullscreen = getRequestedOrientation();
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                } else {
+                    setRequestedOrientation(orientationBeforeFullscreen);
+                }
+                applyFullscreen(fullscreen);
             });
         }
+    }
+
+    public final class AudioBridge {
+        @JavascriptInterface
+        public void ready() {
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                audioPageReady = true;
+                openPendingAudioShare();
+            });
+        }
+
+        @JavascriptInterface
+        public void recordOrStop() {
+            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.recordOrStop(); });
+        }
+
+        @JavascriptInterface
+        public void pickFile() {
+            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.pickFile(); });
+        }
+
+        @JavascriptInterface
+        public void cancel() {
+            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.cancel(); });
+        }
+    }
+
+    private void sendAudioState(String phase, List<String> keys, String message, AudioFileInfo file) {
+        if (webView == null || isDestroyed()) return;
+        String metadata = file == null ? "null" : file.toJson().toString()
+                .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029");
+        webView.evaluateJavascript("if (window.updateAudioSearch) window.updateAudioSearch("
+                + JSONObject.quote(phase) + "," + new JSONArray(keys) + "," + JSONObject.quote(message)
+                + "," + metadata + ");", null);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        audioSearch.onPermissionResult(requestCode, grantResults);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        audioSearch.onFileResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onStop() {
+        audioSearch.stopRecordingOnBackground();
+        super.onStop();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus && scaleFullscreen) applyFullscreen(true);
     }
 
     private void applyFullscreen(boolean fullscreen) {
@@ -193,9 +321,10 @@ public final class MainActivity extends Activity {
             finish();
             return;
         }
-        webView.evaluateJavascript("(() => { const dialog = document.querySelector('dialog[open]');"
-                + " if (dialog) { dialog.close(); return true; }"
-                + " return typeof closeScaleView === 'function' && closeScaleView(); })()", closed -> {
+        webView.evaluateJavascript("(() => {"
+                + " if (typeof dismissDialog === 'function' && dismissDialog()) return true;"
+                + " if (typeof dismissScaleView === 'function' && dismissScaleView()) return true;"
+                + " return typeof cancelAudioSearch === 'function' && cancelAudioSearch(); })()", closed -> {
             if (!"true".equals(closed) && !isDestroyed()) finish();
         });
     }
@@ -205,10 +334,13 @@ public final class MainActivity extends Activity {
         switch (path) {
             case "/index.html": return "text/html";
             case "/styles.css": return "text/css";
+            case "/brand.svg": return "image/svg+xml";
             case "/scales.js":
             case "/chords.js":
             case "/settings.js":
+            case "/note-audio.js":
             case "/fretboard.js":
+            case "/history.js":
             case "/app.js": return "text/javascript";
             default: return null;
         }
@@ -216,6 +348,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        audioSearch.destroy();
         if (webView != null) {
             ((ViewGroup) webView.getParent()).removeView(webView);
             webView.destroy();

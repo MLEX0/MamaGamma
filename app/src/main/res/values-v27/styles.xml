@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="GammamaTheme" parent="GammamaBaseTheme">
-        <item name="android:navigationBarColor">#F3F4E9</item>
+        <item name="android:navigationBarColor">#F6F4FA</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>
