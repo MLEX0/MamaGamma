@@ -7,70 +7,175 @@
     <title>Gamma Mama · Поиск гаммы</title>
     <link rel="stylesheet" href="styles.css">
     <script src="scales.js" defer></script>
+    <script src="chords.js" defer></script>
+    <script src="settings.js" defer></script>
+    <script src="fretboard.js" defer></script>
     <script src="app.js" defer></script>
 </head>
 <body>
-    <header class="topbar">
+    <header class="topbar" id="finder-header">
         <div class="topbar-inner">
             <div class="brand"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span>Gamma Mama</div>
-            <span class="tuning" aria-label="Стандартный строй ми, ля, ре, соль, си, ми">E A D G B E</span>
+            <button id="settings-open" class="settings-open" type="button" aria-haspopup="dialog">
+                <span class="settings-icon" aria-hidden="true"><i></i><i></i></span>Настройки
+            </button>
         </div>
     </header>
 
-    <main>
+    <main class="finder" id="finder">
         <div class="intro">
             <h1>Поиск гаммы</h1>
-            <p>Выбирай ноты на грифе, чтобы сузить поиск.</p>
+            <div class="search-modes" role="group" aria-label="Способ поиска">
+                <button type="button" id="mode-notes" aria-pressed="true">По нотам</button>
+                <button type="button" id="mode-chords" aria-pressed="false">По аккордам</button>
+            </div>
         </div>
 
-        <div class="scale-control">
-            <span class="scale-icon" aria-hidden="true">♪</span>
-            <div class="scale-field">
-                <label for="scale-picker">Гамма на грифе</label>
-                <select id="scale-picker"></select>
+        <div class="workspace" id="workspace" data-mode="notes">
+            <form id="chord-search" class="chord-search" hidden>
+                <label for="chord-input">Аккорды песни</label>
+                <textarea id="chord-input" rows="2" maxlength="2000" autocomplete="off" autocapitalize="off"
+                          spellcheck="false" placeholder="Am – F – C – G" aria-describedby="chord-error"></textarea>
+                <p id="chord-error" class="chord-error" role="alert" hidden></p>
+                <button class="primary-button" type="submit">Найти гаммы</button>
+            </form>
+
+            <div class="instrument-panel" id="instrument-panel">
+                <div class="scale-control">
+                    <div class="scale-field">
+                        <label for="scale-picker">Гамма на грифе</label>
+                        <select id="scale-picker"></select>
+                        <span class="chevron" aria-hidden="true"></span>
+                    </div>
+                    <button type="button" class="open-scale" id="scale-open" aria-label="Открыть гамму на весь экран" aria-controls="scale-view">
+                        <span class="expand-icon" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <section class="board" id="main-board" aria-labelledby="board-title">
+                    <div class="board-header">
+                        <div class="board-instrument">
+                            <h2 id="board-title">Гитарный гриф</h2>
+                            <span id="board-tuning" class="tuning"></span>
+                        </div>
+                        <div class="fret-navigation" role="group" aria-label="Прокрутка грифа">
+                            <button id="fret-prev" type="button" aria-label="К первым ладам" class="arrow previous"><span></span></button>
+                            <span id="fret-range" class="fret-range"></span>
+                            <button id="fret-next" type="button" aria-label="К следующим ладам" class="arrow"><span></span></button>
+                        </div>
+                    </div>
+                    <div class="fretboard" id="fretboard" role="group" aria-label="Гриф">
+                        <div class="strings" id="strings" aria-hidden="true"></div>
+                        <div class="fret-scroll" id="fret-scroll">
+                            <div class="frets" id="frets"></div>
+                        </div>
+                    </div>
+                    <ul class="legend" aria-label="Обозначения">
+                        <li id="chosen-legend"><span class="legend-dot chosen-dot"></span>Выбрано</li>
+                        <li><span class="legend-dot root-dot"></span>Тоника</li>
+                        <li><span class="legend-dot scale-dot"></span>В гамме</li>
+                        <li id="hint-legend" hidden><span class="legend-dot hint-dot"></span>Подходит</li>
+                    </ul>
+                </section>
             </div>
-            <span class="chevron" aria-hidden="true"></span>
+
+            <div class="match-panel" id="match-panel">
+                <section class="selection" id="note-search" aria-labelledby="selection-title">
+                    <div class="section-heading">
+                        <h2 id="selection-title">Выбранные ноты</h2>
+                        <button class="text-button" id="reset" type="button" disabled>Сбросить</button>
+                    </div>
+                    <div class="selected-notes" id="selected-notes"></div>
+                </section>
+
+                <section class="matches" id="match-section" aria-labelledby="matches-title">
+                    <div class="section-heading">
+                        <h2 id="matches-title">Подходящие гаммы</h2>
+                        <span class="match-count" id="match-count" aria-live="polite"></span>
+                    </div>
+                    <p id="match-status" class="match-status" role="status" hidden></p>
+                    <div class="results" id="results"></div>
+                    <button class="more-button" id="more" type="button" aria-controls="results" aria-expanded="false" hidden></button>
+                </section>
+            </div>
         </div>
-
-        <section class="board" aria-labelledby="board-title">
-            <div class="board-header">
-                <h2 id="board-title">Гитарный гриф</h2>
-                <div class="fret-navigation" role="group" aria-label="Прокрутка грифа">
-                    <button id="fret-prev" type="button" aria-label="К первым ладам" class="arrow previous"><span></span></button>
-                    <span id="fret-range">0–6</span>
-                    <button id="fret-next" type="button" aria-label="К следующим ладам" class="arrow"><span></span></button>
-                </div>
-            </div>
-            <div class="fretboard" id="fretboard" aria-label="Шесть струн, лады от 0 до 24">
-                <div class="strings" id="strings" aria-hidden="true"></div>
-                <div class="fret-scroll" id="fret-scroll">
-                    <div class="frets" id="frets"></div>
-                </div>
-            </div>
-            <ul class="legend" aria-label="Обозначения">
-                <li><span class="legend-dot chosen-dot"></span>Выбрано</li>
-                <li><span class="legend-dot root-dot"></span>Тоника</li>
-                <li><span class="legend-dot scale-dot"></span>В гамме</li>
-                <li id="hint-legend" hidden><span class="legend-dot hint-dot"></span>Подходит</li>
-            </ul>
-        </section>
-
-        <section class="selection" aria-labelledby="selection-title">
-            <div class="section-heading">
-                <h2 id="selection-title">Выбранные ноты</h2>
-                <button class="text-button" id="reset" type="button" disabled>Сбросить</button>
-            </div>
-            <div class="selected-notes" id="selected-notes"></div>
-        </section>
-
-        <section class="matches" aria-labelledby="matches-title">
-            <div class="section-heading">
-                <h2 id="matches-title">Подходящие гаммы</h2>
-                <span class="match-count" id="match-count" aria-live="polite"></span>
-            </div>
-            <div class="results" id="results"></div>
-            <button class="more-button" id="more" type="button" aria-controls="results" aria-expanded="false" hidden></button>
-        </section>
     </main>
+
+    <main id="scale-view" class="scale-view" aria-labelledby="detail-title" hidden>
+        <header class="scale-view-header">
+            <button type="button" id="detail-close" class="detail-back" aria-label="Вернуться к поиску">
+                <span class="back-icon" aria-hidden="true"></span>
+            </button>
+            <div class="detail-heading">
+                <h1 id="detail-title"></h1>
+                <p id="detail-pitches" class="detail-pitches"></p>
+            </div>
+        </header>
+        <div class="detail-content">
+            <section class="board detail-board" id="detail-board" aria-labelledby="detail-board-title">
+                <div class="board-header">
+                    <div class="board-instrument">
+                        <h2 id="detail-board-title"></h2>
+                        <span class="tuning"></span>
+                    </div>
+                    <div class="fret-navigation" role="group" aria-label="Прокрутка грифа гаммы">
+                        <button type="button" aria-label="К предыдущим ладам" class="arrow previous"><span></span></button>
+                        <span class="fret-range"></span>
+                        <button type="button" aria-label="К следующим ладам" class="arrow"><span></span></button>
+                    </div>
+                </div>
+                <div class="fretboard" role="group" aria-label="Гриф гаммы">
+                    <div class="strings" aria-hidden="true"></div>
+                    <div class="fret-scroll"><div class="frets"></div></div>
+                </div>
+                <ul class="legend" aria-label="Обозначения">
+                    <li><span class="legend-dot root-dot"></span>Тоника</li>
+                    <li><span class="legend-dot scale-dot"></span>В гамме</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+        <div class="settings-header">
+            <h2 id="settings-title">Настройки</h2>
+            <button id="settings-close" class="dialog-close" type="button" aria-label="Закрыть настройки">×</button>
+        </div>
+        <div class="settings-content">
+            <fieldset class="settings-field">
+                <legend>Тема</legend>
+                <div class="theme-options" id="theme-options">
+                    <label><input type="radio" name="theme" value="system"><span>Системная</span></label>
+                    <label><input type="radio" name="theme" value="light"><span>Светлая</span></label>
+                    <label><input type="radio" name="theme" value="dark"><span>Тёмная</span></label>
+                </div>
+            </fieldset>
+
+            <div class="settings-field">
+                <label for="instrument-picker">Инструмент</label>
+                <select id="instrument-picker" class="settings-select"></select>
+            </div>
+
+            <div class="settings-field">
+                <label for="tuning-picker">Строй</label>
+                <select id="tuning-picker" class="settings-select"></select>
+            </div>
+
+            <fieldset class="settings-field">
+                <legend id="strings-title">Ноты открытых струн</legend>
+                <div id="string-tuning" class="string-tuning"></div>
+            </fieldset>
+
+            <div class="settings-field fret-length-field">
+                <label for="fret-length">Количество ладов</label>
+                <div class="fret-stepper">
+                    <button id="length-less" type="button" aria-label="Уменьшить количество ладов">−</button>
+                    <input id="fret-length" type="number" inputmode="numeric" enterkeyhint="done" step="1">
+                    <button id="length-more" type="button" aria-label="Увеличить количество ладов">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="settings-footer"><button id="settings-done" type="button">Готово</button></div>
+    </dialog>
 </body>
 </html>

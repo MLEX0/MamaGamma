@@ -9,4 +9,7 @@
     <style name="GammamaTheme" parent="GammamaBaseTheme">
         <item name="android:navigationBarColor">#243B2A</item>
     </style>
+    <style name="GammamaDarkControls" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#9BEAD8</item>
+    </style>
 </resources>
