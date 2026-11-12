@@ -86,6 +86,9 @@
                         <select id="scale-picker"></select>
                         <span class="chevron" aria-hidden="true"></span>
                     </div>
+                    <button type="button" class="scale-play" id="scale-play" aria-label="Сыграть гамму" disabled>
+                        <span class="scale-play-icon" aria-hidden="true"></span><span class="scale-play-label" aria-hidden="true">Сыграть</span>
+                    </button>
                     <button type="button" class="open-scale" id="scale-open" aria-label="Открыть гамму на весь экран" data-i18n-aria-label="openFullScale" aria-controls="scale-view">
                         <span class="expand-icon" aria-hidden="true"></span>
                     </button>
@@ -154,7 +157,12 @@
                 <h1 id="detail-title"></h1>
                 <p id="detail-pitches" class="detail-pitches"></p>
             </div>
-            <button id="detail-hide-controls" class="secondary-button" type="button" data-i18n="fretboardOnly">Только гриф</button>
+            <div class="detail-actions">
+                <button type="button" class="scale-play" id="detail-scale-play" aria-label="Сыграть гамму" disabled>
+                    <span class="scale-play-icon" aria-hidden="true"></span><span class="scale-play-label" aria-hidden="true">Сыграть</span>
+                </button>
+                <button id="detail-hide-controls" class="secondary-button" type="button" data-i18n="fretboardOnly">Только гриф</button>
+            </div>
         </header>
         <div class="detail-content">
             <section class="board detail-board" id="detail-board" aria-labelledby="detail-board-title" data-fret-range>
@@ -232,6 +240,26 @@
                 <input type="range" id="note-volume" min="0" max="100" step="1">
                 <button id="note-preview" class="secondary-button" type="button" data-i18n="playNotePreview">Послушать ноту</button>
             </div>
+
+            <div class="settings-field volume-setting">
+                <label for="scale-tempo" data-i18n="scaleTempo">Темп гаммы</label>
+                <output id="scale-tempo-value" for="scale-tempo" aria-hidden="true"></output>
+                <input type="range" id="scale-tempo" step="1">
+            </div>
+
+            <fieldset class="settings-field">
+                <legend data-i18n="pianoRange">Диапазон клавиш</legend>
+                <div class="piano-range-options">
+                    <div class="settings-field">
+                        <label for="piano-octave-count" data-i18n="pianoOctaveCount">Количество октав</label>
+                        <select id="piano-octave-count" class="settings-select"></select>
+                    </div>
+                    <div class="settings-field">
+                        <label for="piano-first-octave" data-i18n="pianoFirstOctave">Начальная октава</label>
+                        <select id="piano-first-octave" class="settings-select"></select>
+                    </div>
+                </div>
+            </fieldset>
 
             <div class="settings-field">
                 <label for="instrument-picker" data-i18n="instrument">Инструмент</label>

@@ -6,6 +6,14 @@ const FretSettings = (() => {
     const themes = ["system", "light", "dark"];
     const minFrets = 12;
     const maxFrets = 36;
+    const lowestOctave = 2;
+    const highestOctave = 7;
+    const maxOctaveCount = 5;
+    const defaultOctaveCount = 2;
+    const defaultFirstOctave = 4;
+    const minTempo = 50;
+    const maxTempo = 180;
+    const defaultTempo = 96;
 
     function preset(id, name, notes) {
         const midi = notes.split(" ").reverse().map(note => {
@@ -57,6 +65,10 @@ const FretSettings = (() => {
     const volumeSlider = document.getElementById("note-volume");
     const volumeValue = document.getElementById("note-volume-value");
     const previewButton = document.getElementById("note-preview");
+    const tempoSlider = document.getElementById("scale-tempo");
+    const tempoValue = document.getElementById("scale-tempo-value");
+    const octaveCountPicker = document.getElementById("piano-octave-count");
+    const firstOctavePicker = document.getElementById("piano-first-octave");
     const instrumentPicker = document.getElementById("instrument-picker");
     const tuningPicker = document.getElementById("tuning-picker");
     const stringTuning = document.getElementById("string-tuning");
@@ -102,8 +114,19 @@ const FretSettings = (() => {
         const volume = Number.isInteger(saved.volume) && saved.volume >= 0 && saved.volume <= 100 ? saved.volume : 100;
         const language = I18n.languages.some(item => item.id === saved.language) ? saved.language : "system";
         const noteSystem = NoteNames.systems.some(item => item.id === saved.noteSystem) ? saved.noteSystem : "international";
+        const tempo = Number.isInteger(saved.tempo) ? Math.min(maxTempo, Math.max(minTempo, saved.tempo)) : defaultTempo;
+        const piano = readPianoRange(saved.piano || {});
         return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", language, noteSystem,
-            sharpsOnly: saved.sharpsOnly === true, sound: saved.sound !== false, volume, setups };
+            sharpsOnly: saved.sharpsOnly === true, sound: saved.sound !== false, volume, tempo, piano, setups };
+    }
+
+    function readPianoRange({ firstOctave, octaveCount }) {
+        const count = Number.isInteger(octaveCount) ? Math.min(maxOctaveCount, Math.max(1, octaveCount)) : defaultOctaveCount;
+        const start = Number.isInteger(firstOctave) ? firstOctave : defaultFirstOctave;
+        return {
+            firstOctave: Math.min(highestOctave - count + 1, Math.max(lowestOctave, start)),
+            octaveCount: count,
+        };
     }
 
     function persist() {
@@ -140,6 +163,14 @@ const FretSettings = (() => {
 
     function noteVolume() {
         return state.volume / 100;
+    }
+
+    function pianoRange() {
+        return { ...state.piano };
+    }
+
+    function scaleTempo() {
+        return state.tempo;
     }
 
     function applyTheme() {
@@ -195,11 +226,30 @@ const FretSettings = (() => {
         volumeValue.value = `${state.volume}%`;
     }
 
+    function renderTempo() {
+        tempoSlider.value = state.tempo;
+        tempoValue.value = t("tempoBpm", { tempo: state.tempo });
+        tempoSlider.setAttribute("aria-valuetext", tempoValue.value);
+    }
+
+    function renderPianoRange() {
+        const { firstOctave, octaveCount } = state.piano;
+        octaveCountPicker.value = String(octaveCount);
+        firstOctavePicker.textContent = "";
+        const maxStart = highestOctave - octaveCount + 1;
+        for (let octave = lowestOctave; octave <= maxStart; octave += 1) {
+            firstOctavePicker.add(new Option(`${NoteNames.name(0)}${octave}`, octave));
+        }
+        firstOctavePicker.value = String(firstOctave);
+    }
+
     function renderSettings() {
         applyTheme();
         themeOptions.querySelector(`input[value="${state.theme}"]`).checked = true;
         soundSwitch.checked = state.sound;
         renderVolume();
+        renderTempo();
+        renderPianoRange();
         options(languagePicker, [{ id: "system", name: "systemLanguage" }, ...I18n.languages]);
         languagePicker.value = state.language;
         options(noteSystemPicker, NoteNames.systems.map(({ id, label }) => ({ id, name: label })));
@@ -239,6 +289,7 @@ const FretSettings = (() => {
             state.noteSystem = noteSystemPicker.value;
             if (NoteNames.setMode(state.noteSystem)) {
                 renderStrings();
+                renderPianoRange();
                 onNotationChange();
             }
             persist();
@@ -272,6 +323,29 @@ const FretSettings = (() => {
             if (state.volume > 0) onPreview();
         });
         previewButton.addEventListener("click", onPreview);
+
+        tempoSlider.min = minTempo;
+        tempoSlider.max = maxTempo;
+        tempoSlider.addEventListener("input", () => {
+            state.tempo = tempoSlider.valueAsNumber;
+            renderTempo();
+        });
+        tempoSlider.addEventListener("change", persist);
+
+        for (let count = 1; count <= maxOctaveCount; count += 1) {
+            octaveCountPicker.add(new Option(String(count), count));
+        }
+        const setPianoRange = () => {
+            state.piano = readPianoRange({
+                firstOctave: Number(firstOctavePicker.value),
+                octaveCount: Number(octaveCountPicker.value),
+            });
+            renderPianoRange();
+            persist();
+            onSetupChange(false);
+        };
+        firstOctavePicker.addEventListener("change", setPianoRange);
+        octaveCountPicker.addEventListener("change", setPianoRange);
 
         instrumentPicker.addEventListener("change", () => {
             state.instrument = instrumentPicker.value;
@@ -325,5 +399,5 @@ const FretSettings = (() => {
         renderSettings();
     }
 
-    return { instrument, setup, soundEnabled, noteVolume, init, reset };
+    return { instrument, setup, soundEnabled, noteVolume, pianoRange, scaleTempo, init, reset };
 })();

@@ -8,11 +8,11 @@
 
 Trouve des gammes à partir de notes, d’accords ou d’un enregistrement. Joue les gammes sur le manche virtuel ou le clavier de piano.
 
-**Version 1.11.0** · Android 8.0 ou version ultérieure · Analyse sur l’appareil
+**Version 1.12.0** · Android 8.0 ou version ultérieure · Analyse sur l’appareil
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">Télécharger l’APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">Notes de version</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">Télécharger l’APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Notes de version</a>
 </p>
 
 ## Démarrage rapide
@@ -68,7 +68,7 @@ En mode **Clavier de piano**, le plein écran met en évidence les notes de la g
 
 ### Installer l’APK
 
-Télécharge `Mama-Gamma-1.11.0.apk` sur ton appareil Android avec le lien ci-dessus. Si tu as compilé l’application, transfère `app-debug.apk` sur ton appareil. Ouvre le fichier, touche **Installer** et lance Mama Gamma. Si Android demande une autorisation, permets l’installation depuis l’application qui ouvre le fichier APK.
+Télécharge `Mama-Gamma-1.12.0.apk` sur ton appareil Android avec le lien ci-dessus. Si tu as compilé l’application, transfère `app-debug.apk` sur ton appareil. Ouvre le fichier, touche **Installer** et lance Mama Gamma. Si Android demande une autorisation, permets l’installation depuis l’application qui ouvre le fichier APK.
 
 ### Compiler l’APK depuis le code source
 

@@ -8,11 +8,11 @@
 
 Finde Tonleitern anhand von Noten, Akkorden oder Audio. Übe die Tonleitern auf dem virtuellen Griffbrett oder den Klaviertasten.
 
-**Version 1.11.0** · Android 8.0 oder neuer · Analyse auf dem Gerät
+**Version 1.12.0** · Android 8.0 oder neuer · Analyse auf dem Gerät
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">APK herunterladen</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">Versionshinweise</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">APK herunterladen</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Versionshinweise</a>
 </p>
 
 ## Schnellstart
@@ -68,7 +68,7 @@ Unter **Klaviertasten** hebt die Vollbildansicht die Töne der Tonleiter auf der
 
 ### Fertige APK installieren
 
-Lade `Mama-Gamma-1.11.0.apk` über den Link oben auf dein Android-Gerät. Wenn du die App selbst erstellt hast, übertrage `app-debug.apk`. Öffne die Datei, tippe auf **Installieren** und starte Mama Gamma. Wenn Android nach einer Berechtigung fragt, erlaube der App, mit der du die APK öffnest, die Installation aus dieser Quelle.
+Lade `Mama-Gamma-1.12.0.apk` über den Link oben auf dein Android-Gerät. Wenn du die App selbst erstellt hast, übertrage `app-debug.apk`. Öffne die Datei, tippe auf **Installieren** und starte Mama Gamma. Wenn Android nach einer Berechtigung fragt, erlaube der App, mit der du die APK öffnest, die Installation aus dieser Quelle.
 
 ### APK aus dem Quellcode erstellen
 

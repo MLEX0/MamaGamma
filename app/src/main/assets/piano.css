@@ -1,6 +1,14 @@
 .piano-board {
-    --piano-key-min: 38px;
-    --piano-key-height: clamp(146px, 29vw, 194px);
+    --piano-key-height: clamp(146px, 33vw, 194px);
+    --piano-selected: #ffdf96;
+    --piano-selected-ink: #362817;
+    --piano-tonic: #94e4cf;
+    --piano-tonic-ink: #102f28;
+    --piano-scale: #d1c0fa;
+    --piano-scale-ink: #281c42;
+    --piano-suggested: #485679;
+    --piano-suggested-ink: #f4f6ff;
+    container-type: inline-size;
     min-width: 0;
     padding: 8px;
     overflow: hidden;
@@ -9,20 +17,62 @@
     background: var(--board);
 }
 
+.piano-octave-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding-bottom: 7px;
+}
+
+.piano-octave-button {
+    flex: 1 0 auto;
+    max-width: 160px;
+    min-height: 36px;
+    padding: 3px 8px;
+    border: 1px solid var(--board-edge);
+    border-radius: 6px;
+    background: var(--board-grid);
+    color: var(--board-text);
+    font-size: 12px;
+    font-weight: 700;
+    touch-action: manipulation;
+}
+
+.piano-octave-button[aria-pressed="true"] {
+    border-color: var(--piano-scale);
+    background: var(--piano-scale);
+    color: var(--piano-scale-ink);
+}
+
 .piano-scroll {
     min-width: 0;
     overflow: auto hidden;
     overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--board-string) var(--board);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
 }
 
+.piano-scroll::-webkit-scrollbar { display: none; }
+
 .piano-keys {
-    position: relative;
-    width: 100%;
-    min-width: calc(14 * var(--piano-key-min));
+    --piano-visible-octaves: 1;
+    display: flex;
+    width: max(100%, calc(100% * var(--piano-octave-count) / var(--piano-visible-octaves)));
     height: var(--piano-key-height);
     border-top: 3px solid var(--board-edge);
+}
+
+.piano-octave-keys {
+    position: relative;
+    flex: 0 0 calc(100% / var(--piano-octave-count));
+    scroll-snap-align: start;
+}
+
+@container (min-width: 630px) {
+    .piano-board[data-octave-count="2"] .piano-octave-navigation { display: none; }
+    .piano-keys { --piano-visible-octaves: 2; }
 }
 
 .piano-key {
@@ -33,8 +83,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    gap: 2px;
-    min-width: 0;
+    gap: 4px;
     padding: 0 1px 8px;
     border: 1px solid var(--board-divider);
     border-top: 0;
@@ -45,23 +94,23 @@
 }
 
 .piano-white {
-    width: calc(100% / 14);
+    width: calc(100% / 7);
     height: 100%;
     background: linear-gradient(#fbf9ff, #eae4f4);
     color: #382d49;
     box-shadow: inset 0 -3px 0 #21152c28;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .piano-black {
     z-index: 1;
-    width: calc(62% / 14);
+    width: calc(72% / 7);
     height: 62%;
     transform: translateX(-50%);
     background: linear-gradient(#373048, #211b30);
     color: var(--board-text);
     box-shadow: 0 3px 3px #120d2480, inset 0 -4px 0 #120d2460;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .piano-key-name {
@@ -71,51 +120,93 @@
 }
 
 .piano-octave {
+    margin-inline-start: 1px;
     font-size: 9px;
-    font-weight: 600;
-    opacity: .72;
+    font-weight: 650;
 }
 
-.piano-key[data-state="hint"] {
-    background: var(--hint-key);
-    color: var(--hint-text);
+.piano-key-mark {
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1;
 }
 
-.piano-key[data-state="scale"] {
-    background: var(--scale-key);
-    color: var(--scale-ink);
+.piano-key[data-state="hint"],
+.piano-legend li[data-state="hint"] .piano-legend-mark {
+    background: var(--piano-suggested);
+    color: var(--piano-suggested-ink);
 }
 
-.piano-key[data-state="root"] {
-    border-color: var(--root-ring);
-    background: var(--root-key);
-    color: var(--scale-ink);
-    box-shadow: inset 0 0 0 2px var(--root-ring);
+.piano-key[data-state="hint"] .piano-key-name {
+    padding-bottom: 2px;
+    border-bottom: 1px dashed currentColor;
 }
 
-.piano-key[data-state="chosen"] {
-    border-color: var(--chosen-edge);
-    background: var(--chosen);
-    color: var(--chosen-ink);
+.piano-key[data-state="scale"],
+.piano-legend li[data-state="scale"] .piano-legend-mark {
+    background: var(--piano-scale);
+    color: var(--piano-scale-ink);
 }
 
-.piano-key.piano-chosen-root { box-shadow: inset 0 0 0 2px var(--root-ring); }
-.piano-key:not(:disabled):active { filter: brightness(.9); }
-.piano-key:focus-visible { outline-offset: -3px; }
+.piano-key[data-state="root"],
+.piano-legend li[data-state="root"] .piano-legend-mark {
+    background: var(--piano-tonic);
+    color: var(--piano-tonic-ink);
+}
+
+.piano-key[data-state="chosen"],
+.piano-legend li[data-state="chosen"] .piano-legend-mark {
+    background: var(--piano-selected);
+    color: var(--piano-selected-ink);
+}
+
+.piano-key.piano-chosen-root { box-shadow: inset 0 0 0 2px var(--piano-tonic-ink); }
+
+.piano-key:active,
+.piano-key.piano-struck {
+    filter: brightness(.79);
+    outline: 2px solid currentColor;
+    outline-offset: -3px;
+}
+
+.piano-key:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
 .piano-black:focus-visible { z-index: 2; }
-.piano-key:disabled[data-state="plain"] .piano-key-name { opacity: .55; }
+.piano-key.piano-playing { outline: 3px solid currentColor; outline-offset: -4px; }
+.piano-key.piano-playing .piano-key-name { text-decoration: underline; text-underline-offset: 3px; }
+
+.piano-legend {
+    gap: 6px 13px;
+    min-height: 0;
+    padding: 9px 2px 1px;
+    font-size: 11px;
+}
+
+.piano-legend-mark {
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    flex: none;
+    font-size: 10px;
+    font-weight: 850;
+    line-height: 1;
+}
+
+.piano-legend li[data-state="hint"] .piano-legend-mark { border: 1px dashed var(--piano-suggested-ink); }
+.piano-legend li[data-state="plain"] .piano-legend-mark { border: 1px solid var(--board-muted); }
 
 #detail-piano {
     display: flex;
     flex: 1;
     flex-direction: column;
-    min-height: 150px;
+    min-height: 160px;
     border: 0;
     border-radius: 0;
 }
 
 #detail-piano .piano-scroll { display: flex; flex: 1; }
-#detail-piano .piano-keys { flex: 0 0 100%; height: auto; }
+#detail-piano .piano-keys { flex: none; height: auto; }
 
 @media (orientation: landscape) and (max-height: 500px) {
     #main-piano { --piano-key-height: clamp(112px, 37vh, 174px); }

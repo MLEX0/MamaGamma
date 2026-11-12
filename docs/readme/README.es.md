@@ -8,11 +8,11 @@
 
 Encuentra escalas a partir de notas, acordes o audio. Practica las escalas en el diapasón virtual o en las teclas de piano.
 
-**Versión 1.11.0** · Android 8.0 o posterior · Análisis en el dispositivo
+**Versión 1.12.0** · Android 8.0 o posterior · Análisis en el dispositivo
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">Descargar APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">Notas de la versión</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">Descargar APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Notas de la versión</a>
 </p>
 
 ## Inicio rápido
@@ -68,7 +68,7 @@ Con **Teclas de piano**, la vista a pantalla completa resalta las notas de la es
 
 ### Instalar el APK
 
-Descarga `Mama-Gamma-1.11.0.apk` en tu dispositivo Android con el enlace de arriba. Si has compilado la aplicación, copia `app-debug.apk` al dispositivo. Abre el archivo, toca **Instalar** e inicia Mama Gamma. Si Android solicita permiso, autoriza la instalación desde la aplicación con la que abriste el APK.
+Descarga `Mama-Gamma-1.12.0.apk` en tu dispositivo Android con el enlace de arriba. Si has compilado la aplicación, copia `app-debug.apk` al dispositivo. Abre el archivo, toca **Instalar** e inicia Mama Gamma. Si Android solicita permiso, autoriza la instalación desde la aplicación con la que abriste el APK.
 
 ### Compilar el APK desde el código fuente
 

@@ -108,6 +108,11 @@ function createFretboard(section, togglePitch) {
         });
     }
 
+    function setPlaying(midi) {
+        const playingPitch = midi === null ? null : midi % 12;
+        notes.forEach(({ cell, pitch }) => cell.classList.toggle("note-playing", pitch === playingPitch));
+    }
+
     function updateRange() {
         if (!frets.firstElementChild) return;
         const width = frets.firstElementChild.getBoundingClientRect().width;
@@ -140,5 +145,5 @@ function createFretboard(section, togglePitch) {
     next.addEventListener("click", () => page(1));
     scroll.addEventListener("scroll", updateRange, { passive: true });
     window.addEventListener("resize", updateRange);
-    return { build, render, updateRange, leadingFret, scrollToFret };
+    return { build, render, setPlaying, updateRange, leadingFret, scrollToFret };
 }

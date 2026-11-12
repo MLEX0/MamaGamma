@@ -7,12 +7,12 @@
 </p>
 
 <p align="center">
-  <strong>Version 1.11.0</strong> · Android 8.0 and later · Works offline
+  <strong>Version 1.12.0</strong> · Android 8.0 and later · Works offline
 </p>
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">Download APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">Release notes</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">Download APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Release notes</a>
 </p>
 
 <p align="center">
@@ -153,7 +153,7 @@ Tap **History** in the top bar to see the last 100 successful searches on your d
 
 ### Install an APK
 
-1. Download `Mama-Gamma-1.11.0.apk` above on your Android device. If you built the app, copy `app-debug.apk` to the device.
+1. Download `Mama-Gamma-1.12.0.apk` above on your Android device. If you built the app, copy `app-debug.apk` to the device.
 2. Open the file. If Android prompts you, allow installs from the app you used to open it. [Android installation help](https://support.google.com/pixelphone/answer/7391672)
 3. Tap **Install**, then open **Mama Gamma**.
 

@@ -5,6 +5,7 @@ const NoteAudio = (() => {
     let output;
     let wave;
     let voice;
+    let playback;
     let request = 0;
 
     function stopVoice() {
@@ -48,9 +49,15 @@ const NoteAudio = (() => {
         oscillator.stop(now + 0.63);
     }
 
-    function play(midi) {
-        if (!FretSettings.soundEnabled() || !window.AudioContext) return;
-        const id = ++request;
+    function canPlay() {
+        return FretSettings.soundEnabled() && FretSettings.noteVolume() > 0 && Boolean(window.AudioContext);
+    }
+
+    function whenReady(id, start, unavailable = () => {}) {
+        if (!canPlay()) {
+            unavailable();
+            return;
+        }
         if (!context) {
             try {
                 const audioContext = new AudioContext();
@@ -59,34 +66,99 @@ const NoteAudio = (() => {
                 output = audioContext.createGain();
                 output.gain.value = FretSettings.noteVolume();
                 output.connect(audioContext.destination);
+                audioContext.onstatechange = () => {
+                    if (playback?.timer !== undefined && audioContext.state !== "running") stop();
+                };
                 context = audioContext;
             } catch (error) {
+                unavailable();
                 return;
             }
         }
         if (context.state === "running") {
-            startNote(midi);
+            start();
         } else {
             context.resume().then(() => {
-                if (id === request && FretSettings.soundEnabled()) startNote(midi);
-            }).catch(() => {
-                // A rejected audio resume must not interrupt note selection.
+                if (id !== request) return;
+                if (context.state === "running" && canPlay()) start();
+                else unavailable();
+            }, () => {
+                if (id === request) unavailable();
             });
         }
+    }
+
+    function play(midi) {
+        stop();
+        whenReady(request, () => startNote(midi));
+    }
+
+    function playScale(midis, bpm, onStep, onEnd) {
+        stop();
+        if (!midis.length || !Number.isFinite(bpm) || bpm <= 0) {
+            onEnd?.();
+            return;
+        }
+
+        const sequence = { onEnd };
+        playback = sequence;
+        const beat = 60 / bpm;
+        let index = 0;
+        let nextBeat;
+
+        function scheduleStep() {
+            sequence.timer = setTimeout(step, Math.ceil((nextBeat - context.currentTime) * 1000));
+        }
+
+        function step() {
+            if (playback !== sequence) return;
+            if (context.state !== "running" || !canPlay()) {
+                stop();
+                return;
+            }
+            const now = context.currentTime;
+            // The first timer can fire before the audio clock has warmed up.
+            if (now + 0.004 < nextBeat) {
+                scheduleStep();
+                return;
+            }
+            if (index === midis.length) {
+                stop();
+                return;
+            }
+            const midi = midis[index++];
+            startNote(midi);
+            nextBeat += beat;
+            // Keep the tempo on the audio clock, without rushing through notes after a stall.
+            if (nextBeat - now < beat / 2) nextBeat = now + beat;
+            scheduleStep();
+            onStep?.(midi);
+        }
+
+        whenReady(request, () => {
+            nextBeat = context.currentTime;
+            step();
+        }, stop);
     }
 
     function stop() {
         request += 1;
         stopVoice();
+        if (!playback) return;
+        const { timer, onEnd } = playback;
+        playback = null;
+        clearTimeout(timer);
+        onEnd?.();
     }
 
     function updateVolume() {
         if (output) output.gain.value = FretSettings.noteVolume();
+        if (FretSettings.noteVolume() === 0) stop();
     }
 
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) stop();
     });
 
-    return { play, stop, updateVolume };
+    return { play, playScale, stop, updateVolume };
 })();

@@ -39,6 +39,7 @@ const chordError = byId("chord-error");
 const resetChords = byId("reset-chords");
 const picker = byId("scale-picker");
 const scaleOpen = byId("scale-open");
+const scalePlay = byId("scale-play");
 const selection = byId("selected-notes");
 const reset = byId("reset");
 const matchSection = byId("match-section");
@@ -53,6 +54,7 @@ const finder = byId("finder");
 const finderHeader = byId("finder-header");
 const scaleView = byId("scale-view");
 const detailBack = byId("detail-close");
+const detailScalePlay = byId("detail-scale-play");
 const hideDetailControls = byId("detail-hide-controls");
 const showDetailControls = byId("detail-show-controls");
 const detailFrom = byId("detail-fret-from");
@@ -85,6 +87,7 @@ let finderPosition = 0;
 let detailOpener = null;
 let detailScale = null;
 let detailScrollFret = null;
+let scalePlaybackButton = null;
 
 function restore() {
     let saved;
@@ -193,6 +196,7 @@ function element(tag, className, value) {
 }
 
 function showDialog(dialog) {
+    stopScalePlayback();
     dialog.showModal();
     document.documentElement.classList.add("modal-open");
 }
@@ -308,6 +312,7 @@ function selectMatches() {
 }
 
 function updateMatches() {
+    stopScalePlayback();
     selectMatches();
     showAll = false;
     persist();
@@ -321,6 +326,7 @@ function renderPicker() {
     picker.textContent = "";
     picker.disabled = !activeScale;
     scaleOpen.disabled = !activeScale;
+    renderScalePlayback();
     if (picker.disabled) {
         const label = session.mode === "audio" ? "chooseAudioHint"
             : session.mode === "chords" ? "enterChordsHint" : "noFittingScales";
@@ -334,6 +340,7 @@ function renderPicker() {
 function setPreview(id) {
     const scale = matches.find(candidate => candidate.id === id);
     if (!scale) return;
+    if (scale.id !== activeScale?.id) stopScalePlayback();
     activeScale = scale;
     session[pinnedKey()] = id;
     picker.value = id;
@@ -341,6 +348,41 @@ function setPreview(id) {
     renderBoard();
     if (isProgressionView()) renderResults();
     else updateActiveResult();
+}
+
+function renderScalePlayback() {
+    const audible = FretSettings.soundEnabled() && FretSettings.noteVolume() > 0;
+    for (const [button, scale] of [[scalePlay, activeScale], [detailScalePlay, detailScale]]) {
+        const playing = scalePlaybackButton === button;
+        const label = t(playing ? "stopScale" : "playScale");
+        button.disabled = !playing && (!scale || !audible);
+        button.classList.toggle("is-playing", playing);
+        button.setAttribute("aria-label", label);
+        button.title = scale && !audible ? t("playScaleMuted") : label;
+        button.querySelector(".scale-play-label").textContent = t(playing ? "stopScaleShort" : "playScaleShort");
+    }
+}
+
+function stopScalePlayback() {
+    if (scalePlaybackButton) NoteAudio.stop();
+}
+
+function playScale(scale, button, board) {
+    if (scalePlaybackButton) {
+        stopScalePlayback();
+        return;
+    }
+    if (button.disabled || !scale) return;
+    const tonic = session.pianoMode ? board.playbackTonic(scale.root) : 60 + scale.root;
+    const notes = scale.pitches.map(pitch => tonic + (pitch - scale.root + 12) % 12);
+    notes.push(tonic + 12);
+    scalePlaybackButton = button;
+    renderScalePlayback();
+    NoteAudio.playScale(notes, FretSettings.scaleTempo(), midi => board.setPlaying(midi), () => {
+        board.setPlaying(null);
+        scalePlaybackButton = null;
+        renderScalePlayback();
+    });
 }
 
 function renderBoard() {
@@ -364,6 +406,7 @@ function renderDetailFrets(from, to) {
 }
 
 function setDetailFrets(from, to, leadingFret = from) {
+    stopScalePlayback();
     session.detailFrom = from;
     session.detailTo = to === FretSettings.setup().frets ? null : to;
     persist();
@@ -386,10 +429,12 @@ function openDetailFretboard() {
 }
 
 function openDetail(scale, opener) {
+    stopScalePlayback();
     flushNotesHistory(scale);
     finderPosition = window.scrollY;
     detailOpener = opener;
     detailScale = scale;
+    renderScalePlayback();
     byId("detail-title").textContent = scale.name;
     byId("detail-pitches").textContent = pitchesOf(scale);
     scaleView.classList.remove("board-only");
@@ -410,6 +455,7 @@ function openDetail(scale, opener) {
 }
 
 function setBoardOnly(enabled) {
+    if (enabled) stopScalePlayback();
     scaleView.classList.toggle("board-only", enabled);
     showDetailControls.hidden = !enabled;
     (enabled ? showDetailControls : hideDetailControls).focus({ preventScroll: true });
@@ -426,6 +472,9 @@ function dismissScaleView() {
 
 function closeScaleView() {
     if (scaleView.hidden) return false;
+    stopScalePlayback();
+    detailScale = null;
+    renderScalePlayback();
     if (!session.pianoMode) detailScrollFret = detailBoard.leadingFret();
     if (window.GammaMamaAppearance) window.GammaMamaAppearance.setScaleFullscreen(false);
     scaleView.hidden = true;
@@ -611,6 +660,7 @@ function updateActiveResult() {
 }
 
 function changeMode(mode) {
+    stopScalePlayback();
     if (session.mode === "notes" && mode !== "notes") flushNotesHistory();
     if (session.mode === "audio" && mode !== "audio") cancelAudioSearch();
     session.mode = mode;
@@ -795,10 +845,16 @@ audioRecord.addEventListener("click", () => {
     NoteAudio.stop();
     audioBridge.recordOrStop();
 });
-audioFile.addEventListener("click", () => { if (audioBridge) audioBridge.pickFile(); });
+audioFile.addEventListener("click", () => {
+    if (!audioBridge) return;
+    stopScalePlayback();
+    audioBridge.pickFile();
+});
 audioCancel.addEventListener("click", cancelAudioSearch);
 if (!audioBridge) updateAudioSearch("error", [], "audioAndroidOnly");
 picker.addEventListener("change", () => setPreview(picker.value));
+scalePlay.addEventListener("click", () => playScale(activeScale, scalePlay, session.pianoMode ? mainPiano : mainBoard));
+detailScalePlay.addEventListener("click", () => playScale(detailScale, detailScalePlay, session.pianoMode ? detailPiano : detailBoard));
 scaleOpen.addEventListener("click", () => openDetail(activeScale, scaleOpen));
 detailBack.addEventListener("click", closeScaleView);
 hideDetailControls.addEventListener("click", () => setBoardOnly(true));
@@ -840,6 +896,7 @@ function buildMainBoard(resetScroll) {
 
 function setPianoMode(enabled) {
     if (session.pianoMode === enabled) return;
+    stopScalePlayback();
     session.pianoMode = enabled;
     persist();
     refreshSetup(false);
@@ -848,6 +905,7 @@ function setPianoMode(enabled) {
 }
 
 function refreshSetup(resetScroll) {
+    stopScalePlayback();
     buildMainBoard(resetScroll);
     renderBoard();
 }
@@ -947,7 +1005,11 @@ historyClear.addEventListener("click", () => {
 FretSettings.init(refreshSetup, enabled => {
     if (!enabled) NoteAudio.stop();
     renderBoard();
-}, NoteAudio.updateVolume, previewVolume, refreshInterface, refreshNotation);
+    renderScalePlayback();
+}, () => {
+    NoteAudio.updateVolume();
+    renderScalePlayback();
+}, previewVolume, refreshInterface, refreshNotation);
 renderAudioControls();
 renderAudioFile();
 changeMode(session.mode);

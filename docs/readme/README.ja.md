@@ -8,11 +8,11 @@
 
 音符、コード、音声からスケールを探し、仮想指板やピアノ鍵盤で練習できます。
 
-**バージョン 1.11.0** · Android 8.0 以降 · 端末上で解析
+**バージョン 1.12.0** · Android 8.0 以降 · 端末上で解析
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">APK をダウンロード</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">リリースノート</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">APK をダウンロード</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">リリースノート</a>
 </p>
 
 ## クイックスタート
@@ -68,7 +68,7 @@
 
 ### APK をインストールする
 
-上のリンクから Android 端末に `Mama-Gamma-1.11.0.apk` をダウンロードします。自分でビルドした場合は `app-debug.apk` を端末へ転送します。ファイルを開いて **インストール** を選択し、Mama Gamma を起動します。Android に許可を求められたら、APK を開いたアプリからのインストールを許可します。
+上のリンクから Android 端末に `Mama-Gamma-1.12.0.apk` をダウンロードします。自分でビルドした場合は `app-debug.apk` を端末へ転送します。ファイルを開いて **インストール** を選択し、Mama Gamma を起動します。Android に許可を求められたら、APK を開いたアプリからのインストールを許可します。
 
 ### ソースコードから APK をビルドする
 

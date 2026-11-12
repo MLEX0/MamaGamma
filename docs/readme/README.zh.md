@@ -8,11 +8,11 @@
 
 根据音符、和弦或音频查找音阶，并在虚拟指板或钢琴键盘上练习。
 
-**版本 1.11.0** · Android 8.0 或更高版本 · 端侧分析
+**版本 1.12.0** · Android 8.0 或更高版本 · 端侧分析
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">下载 APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">版本说明</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">下载 APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">版本说明</a>
 </p>
 
 ## 快速开始
@@ -67,7 +67,7 @@
 
 ### 安装 APK
 
-通过上方链接将 `Mama-Gamma-1.11.0.apk` 下载到 Android 设备。如果自行构建了应用，请将 `app-debug.apk` 传到设备。打开文件，点击 **安装**，然后启动 Mama Gamma。如果 Android 提示授权，请允许用于打开 APK 的应用安装该文件。
+通过上方链接将 `Mama-Gamma-1.12.0.apk` 下载到 Android 设备。如果自行构建了应用，请将 `app-debug.apk` 传到设备。打开文件，点击 **安装**，然后启动 Mama Gamma。如果 Android 提示授权，请允许用于打开 APK 的应用安装该文件。
 
 ### 从源代码构建 APK
 
