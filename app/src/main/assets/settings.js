@@ -145,9 +145,10 @@ const FretSettings = (() => {
         return state.setups[state.instrument];
     }
 
-    function setup() {
-        const { tuning, customPitches, frets } = profile();
-        const tunings = instrument().tunings;
+    function setupFor(id) {
+        const selected = instruments.find(item => item.id === id) || instrument();
+        const { tuning, customPitches, frets } = state.setups[selected.id];
+        const tunings = selected.tunings;
         if (tuning !== "custom") {
             const { pitches, midi } = tunings.find(item => item.id === tuning);
             return { pitches, midi, frets };
@@ -155,6 +156,10 @@ const FretSettings = (() => {
         // Custom tuning stores pitch classes. Use the nearest pitch to each standard open string.
         const midi = tunings[0].midi.map((note, index) => note + (customPitches[index] - note % 12 + 18) % 12 - 6);
         return { pitches: customPitches, midi, frets };
+    }
+
+    function setup() {
+        return setupFor(state.instrument);
     }
 
     function soundEnabled() {
@@ -399,5 +404,5 @@ const FretSettings = (() => {
         renderSettings();
     }
 
-    return { instrument, setup, soundEnabled, noteVolume, pianoRange, scaleTempo, init, reset };
+    return { instrument, instruments: () => instruments, setup, setupFor, soundEnabled, noteVolume, pianoRange, scaleTempo, init, reset };
 })();

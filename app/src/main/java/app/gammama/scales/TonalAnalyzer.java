@@ -17,10 +17,10 @@ final class TonalAnalyzer {
     private TonalAnalyzer() {}
 
     static final class Clip {
-        private final float[] samples;
+        final float[] samples;
         private final int decimation;
-        private final double rate;
-        private int size;
+        final double rate;
+        int size;
         private int pending;
         private float sum;
 
@@ -43,6 +43,10 @@ final class TonalAnalyzer {
 
         boolean full() {
             return size == samples.length;
+        }
+
+        long durationMs() {
+            return Math.round(1000 * size / rate);
         }
     }
 

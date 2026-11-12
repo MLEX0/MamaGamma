@@ -8,8 +8,13 @@
     <script src="startup.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="piano.css">
+    <link rel="stylesheet" href="practice.css">
+    <link rel="stylesheet" href="chord-library.css">
+    <link rel="stylesheet" href="tuner.css">
     <script src="locale-ui.js" defer></script>
     <script src="locale-search.js" defer></script>
+    <script src="audio-locales.js" defer></script>
+    <script src="chord-locales.js" defer></script>
     <script src="i18n.js" defer></script>
     <script src="notation.js" defer></script>
     <script src="scales.js" defer></script>
@@ -17,10 +22,14 @@
     <script src="chords.js" defer></script>
     <script src="settings.js" defer></script>
     <script src="note-audio.js" defer></script>
+    <script src="chord-library.js" defer></script>
     <script src="fretboard.js" defer></script>
     <script src="piano.js" defer></script>
     <script src="history.js" defer></script>
+    <script src="audio-segment.js" defer></script>
+    <script src="navigation.js" defer></script>
     <script src="app.js" defer></script>
+    <script src="tuner.js" defer></script>
 </head>
 <body>
     <header class="topbar" id="finder-header">
@@ -57,14 +66,25 @@
                           spellcheck="false" placeholder="Am – F – C – G" aria-describedby="chord-error"></textarea>
                 <p id="chord-error" class="chord-error" role="alert" hidden></p>
                 <button class="primary-button" type="submit" data-i18n="findScales">Найти гаммы</button>
+                <div id="chord-preview" hidden></div>
             </form>
 
             <section id="audio-search" class="chord-search audio-search" aria-labelledby="audio-title" hidden>
-                <h2 id="audio-title" data-i18n="audioKey">Тональность по аудио</h2>
-                <p class="audio-help" data-i18n="audioHelp">Запиши фрагмент или выбери MP3, WAV или M4A. Анализируются первые 20 секунд.</p>
+                <div class="chord-heading">
+                    <h2 id="audio-title" data-i18n="audioKey">Тональность по аудио</h2>
+                    <button id="audio-clear" type="button" class="text-button" data-i18n="clearSelection" disabled>Сбросить</button>
+                </div>
+                <p class="audio-help" data-i18n="audioSegmentHelp"></p>
                 <div class="audio-actions">
                     <button id="audio-record" type="button" class="primary-button" data-i18n="recordAudio">Записать</button>
                     <button id="audio-file" type="button" class="secondary-button" data-i18n="chooseAudioFile">Выбрать файл</button>
+                </div>
+                <div id="audio-live" class="audio-live" hidden>
+                    <div class="audio-live-header">
+                        <span class="audio-live-indicator" aria-hidden="true"></span>
+                        <output id="audio-live-time" aria-live="off">0:00.0</output>
+                    </div>
+                    <div id="audio-live-bars" class="audio-live-bars" aria-hidden="true"></div>
                 </div>
                 <div id="audio-file-info" class="audio-file-info" hidden>
                     <span class="audio-file-label" data-i18n="selectedFile">Выбранный файл</span>
@@ -73,6 +93,52 @@
                 </div>
                 <p id="audio-status" class="audio-status" role="status" hidden></p>
                 <button id="audio-cancel" type="button" class="text-button audio-cancel" data-i18n="cancel" hidden>Отмена</button>
+                <div id="audio-segment" class="audio-segment" hidden>
+                    <div id="audio-wave-editor" class="audio-wave-editor">
+                        <div class="audio-wave-heading">
+                            <div>
+                                <span data-i18n="audioSelectedDuration">Длительность отрезка</span>
+                                <output id="audio-range-duration" for="audio-segment-from audio-segment-to"></output>
+                            </div>
+                            <div class="audio-wave-zoom">
+                                <button id="audio-wave-zoom-out" class="secondary-button" type="button" data-i18n-aria-label="audioZoomOut">−</button>
+                                <button id="audio-wave-zoom-in" class="secondary-button" type="button" data-i18n-aria-label="audioZoomIn">+</button>
+                            </div>
+                        </div>
+                        <div class="audio-wave-frame">
+                            <div id="audio-wave-track" class="audio-wave-track">
+                                <div id="audio-wave-bars" class="audio-wave-bars" aria-hidden="true"></div>
+                                <div id="audio-wave-selection" class="audio-wave-selection" aria-hidden="true"></div>
+                                <button id="audio-wave-from" class="audio-wave-handle start" type="button" data-i18n-aria-label="audioSegmentFrom"></button>
+                                <button id="audio-wave-to" class="audio-wave-handle end" type="button" data-i18n-aria-label="audioSegmentTo"></button>
+                            </div>
+                            <div class="audio-wave-ticks" aria-hidden="true"><span id="audio-wave-left"></span><span id="audio-wave-right"></span></div>
+                        </div>
+                        <input id="audio-wave-pan" type="range" min="0" step="1" data-i18n-aria-label="audioWavePan" hidden>
+                        <p id="audio-wave-status" class="audio-help" role="status" hidden></p>
+                        <p class="audio-help" data-i18n="audioWaveHint">Перетащи отрезок или его края.</p>
+                    </div>
+                    <div class="audio-range-fields">
+                    <div class="audio-range-row">
+                        <label for="audio-segment-from" data-i18n="audioSegmentFrom">Начало, с</label>
+                        <input id="audio-segment-from" type="number" min="0" step="0.001" inputmode="decimal">
+                    </div>
+                    <div class="audio-range-row">
+                        <label for="audio-segment-to" data-i18n="audioSegmentTo">Конец, с</label>
+                        <input id="audio-segment-to" type="number" min="0" step="0.001" inputmode="decimal">
+                    </div>
+                    </div>
+                    <p id="audio-segment-error" class="chord-error" role="status" hidden></p>
+                    <div class="audio-actions">
+                        <button id="audio-analyze-segment" type="button" class="primary-button" data-i18n="audioAnalyzeSegment">Анализировать отрезок</button>
+                        <button id="audio-save" type="button" class="secondary-button" data-i18n="audioSaveRecording" hidden>Сохранить WAV</button>
+                    </div>
+                </div>
+                <section id="audio-melody" class="audio-melody" aria-labelledby="audio-melody-title" hidden>
+                    <h3 id="audio-melody-title" data-i18n="audioMelody">Распознанные ноты</h3>
+                    <p id="audio-melody-caption" class="audio-help"></p>
+                    <ol id="audio-melody-notes" class="audio-melody-notes"></ol>
+                </section>
             </section>
 
             <div class="instrument-panel" id="instrument-panel">
@@ -148,6 +214,37 @@
         </div>
     </main>
 
+    <main id="tools-workspace" class="finder tools-workspace" aria-labelledby="tools-title" hidden>
+        <h1 id="tools-title" data-i18n="workspaceTools">Инструменты</h1>
+        <div class="music-tools">
+            <button id="chord-library-open" class="music-tool" type="button" aria-haspopup="dialog" aria-controls="chord-library">
+                <span class="music-tool-text">
+                    <strong data-i18n="chordLibraryTitle">Библиотека аккордов</strong>
+                    <span data-i18n="workspaceChordHelp">Ноты, обращения и аппликатуры</span>
+                </span>
+            </button>
+            <button id="tuner-open" class="music-tool" type="button" aria-haspopup="dialog" aria-controls="tuner-dialog">
+                <span class="music-tool-text">
+                    <strong data-i18n="tunerTitle">Тюнер</strong>
+                    <span data-i18n="workspaceTunerHelp">Хроматический режим и настройка по струнам</span>
+                </span>
+            </button>
+        </div>
+    </main>
+
+    <nav id="workspace-nav" class="workspace-nav" aria-label="Разделы приложения" data-i18n-aria-label="workspaceSections">
+        <div class="workspace-nav-inner">
+            <button id="workspace-finder" type="button" aria-controls="finder" aria-current="page">
+                <span class="workspace-search-icon" aria-hidden="true"></span>
+                <span data-i18n="findScale">Поиск гаммы</span>
+            </button>
+            <button id="workspace-tools" type="button" aria-controls="tools-workspace">
+                <span class="workspace-tools-icon" aria-hidden="true"></span>
+                <span data-i18n="workspaceTools">Инструменты</span>
+            </button>
+        </div>
+    </nav>
+
     <main id="scale-view" class="scale-view" aria-labelledby="detail-title" hidden>
         <header class="scale-view-header">
             <button type="button" id="detail-close" class="detail-back" aria-label="Вернуться к поиску" data-i18n-aria-label="backToSearch">
@@ -196,6 +293,34 @@
             <section class="piano-board detail-piano" id="detail-piano" aria-label="Клавиши" data-i18n-aria-label="pianoView" hidden></section>
         </div>
     </main>
+
+    <dialog id="tuner-dialog" class="settings-dialog tuner-dialog" aria-labelledby="tuner-title">
+        <div class="settings-header">
+            <h2 id="tuner-title" data-i18n="tunerTitle">Тюнер</h2>
+            <button class="dialog-close" type="button" data-close-dialog aria-label="Закрыть тюнер" data-i18n-aria-label="tunerClose">×</button>
+        </div>
+        <div class="settings-content">
+            <div class="tuner-targets" role="group" aria-labelledby="tuner-target-label">
+                <p id="tuner-target-label"></p>
+                <div id="tuner-strings" class="tuner-strings"></div>
+            </div>
+            <div class="tuner-meter" id="tuner-meter" data-state="idle">
+                <div class="tuner-reading">
+                    <strong id="tuner-note">—</strong>
+                    <div class="tuner-values">
+                        <span id="tuner-frequency"></span><span id="tuner-cents"></span>
+                    </div>
+                </div>
+                <div class="tuner-track" aria-hidden="true"><span class="tuner-needle"></span></div>
+                <div class="tuner-ticks" aria-hidden="true"><span>−50</span><span>0</span><span>+50</span></div>
+            </div>
+            <p id="tuner-status" class="tuner-status" role="status"></p>
+            <div class="tuner-controls">
+                <button id="tuner-toggle" class="primary-button" type="button" data-i18n="tunerStart">Включить микрофон</button>
+                <span data-i18n="tunerReference">A4 = 440 Гц</span>
+            </div>
+        </div>
+    </dialog>
 
     <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
         <div class="settings-header">
@@ -290,6 +415,52 @@
             </div>
         </div>
         <div class="settings-footer"><button id="settings-done" type="button" data-close-dialog data-i18n="done">Готово</button></div>
+    </dialog>
+
+    <dialog id="chord-library" class="settings-dialog chord-library" aria-labelledby="chord-library-title">
+        <div class="settings-header">
+            <h2 id="chord-library-title" data-i18n="chordLibraryTitle">Библиотека аккордов</h2>
+            <button class="dialog-close" type="button" data-close-dialog aria-label="Закрыть библиотеку" data-i18n-aria-label="closeChordLibrary">×</button>
+        </div>
+        <div class="settings-content">
+            <form class="chord-library-search" id="chord-library-search">
+                <label for="chord-library-query" data-i18n="chordLibrarySearch">Название аккорда</label>
+                <input id="chord-library-query" type="search" maxlength="36" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cmaj7" aria-describedby="chord-library-error">
+                <button class="secondary-button" type="submit" data-i18n="findChord">Найти</button>
+                <p id="chord-library-error" class="chord-error" role="alert" hidden></p>
+            </form>
+            <div class="chord-library-options">
+                <div class="settings-field">
+                    <label for="chord-library-root" data-i18n="chordLibraryRoot">Основной тон</label>
+                    <select id="chord-library-root" class="settings-select"></select>
+                </div>
+                <div class="settings-field">
+                    <label for="chord-library-type" data-i18n="chordLibraryType">Тип аккорда</label>
+                    <select id="chord-library-type" class="settings-select"></select>
+                </div>
+                <div class="settings-field">
+                    <label for="chord-library-bass" data-i18n="chordLibraryBass">Бас / обращение</label>
+                    <select id="chord-library-bass" class="settings-select"></select>
+                </div>
+                <div class="settings-field">
+                    <label for="chord-library-instrument" data-i18n="instrument">Инструмент</label>
+                    <select id="chord-library-instrument" class="settings-select"></select>
+                </div>
+            </div>
+            <div class="chord-library-result">
+                <div>
+                    <h3 id="chord-library-heading"></h3>
+                    <p id="chord-library-notes"></p>
+                </div>
+                <button class="secondary-button chord-library-play" id="chord-library-play" type="button">▶</button>
+            </div>
+            <p id="chord-library-legend" class="chord-library-guide" data-i18n="chordStringLegend">0 — открытая струна, × — приглушить, число — лад.</p>
+            <p id="chord-library-no-shape" class="chord-library-guide" data-i18n="chordNoVoicing" hidden></p>
+            <ol id="chord-library-shapes" class="chord-library-shapes"></ol>
+        </div>
+        <div class="settings-footer">
+            <button id="chord-library-insert" type="button" data-i18n="chordAddToSearch">Добавить в поиск</button>
+        </div>
     </dialog>
 
     <dialog id="history-dialog" class="settings-dialog history-dialog" aria-labelledby="history-title">

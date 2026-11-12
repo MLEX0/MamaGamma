@@ -1,0 +1,27 @@
+"use strict";
+
+const CHORD_MESSAGES = {
+    chordLibraryTitle: ["Библиотека аккордов", "Chord library", "Akkordbibliothek", "Biblioteca de acordes", "Bibliothèque d’accords", "Бібліотека акордів", "コードライブラリ", "和弦库"],
+    closeChordLibrary: ["Закрыть библиотеку", "Close chord library", "Akkordbibliothek schließen", "Cerrar biblioteca", "Fermer la bibliothèque", "Закрити бібліотеку", "コードライブラリを閉じる", "关闭和弦库"],
+    chordLibrarySearch: ["Название аккорда", "Chord name", "Akkordname", "Nombre del acorde", "Nom de l’accord", "Назва акорду", "コード名", "和弦名称"],
+    findChord: ["Найти", "Find", "Suchen", "Buscar", "Chercher", "Знайти", "検索", "查找"],
+    chordLibraryInvalid: ["Введите один аккорд, например {chord}.", "Enter one chord, such as {chord}.", "Gib einen Akkord ein, etwa {chord}.", "Introduce un acorde, por ejemplo {chord}.", "Saisis un accord, par exemple {chord}.", "Введи один акорд, наприклад {chord}.", "{chord} など、コードを1つ入力してください。", "请输入一个和弦，例如 {chord}。"],
+    chordLibraryRoot: ["Основной тон", "Root note", "Grundton", "Fundamental", "Fondamentale", "Основний тон", "根音", "根音"],
+    chordLibraryType: ["Тип аккорда", "Chord type", "Akkordtyp", "Tipo de acorde", "Type d’accord", "Тип акорду", "コードの種類", "和弦类型"],
+    chordLibraryBass: ["Бас / обращение", "Bass / inversion", "Bass / Umkehrung", "Bajo / inversión", "Basse / renversement", "Бас / обернення", "ベース音・転回形", "低音／转位"],
+    chordRootPosition: ["{note} · основной вид", "{note} · root position", "{note} · Grundstellung", "{note} · posición fundamental", "{note} · état fondamental", "{note} · основний вид", "{note}・基本形", "{note} · 原位"],
+    chordMajorType: ["Мажор", "Major", "Dur", "Mayor", "Majeur", "Мажор", "メジャー", "大三和弦"],
+    chordMinorType: ["Минор", "Minor", "Moll", "Menor", "Mineur", "Мінор", "マイナー", "小三和弦"],
+    playChord: ["Сыграть {chord}", "Play {chord}", "{chord} spielen", "Tocar {chord}", "Jouer {chord}", "Зіграти {chord}", "{chord} を再生", "播放 {chord}"],
+    playChordSequence: ["Сыграть прогрессию", "Play progression", "Akkordfolge spielen", "Tocar progresión", "Jouer la progression", "Зіграти прогресію", "進行を再生", "播放和弦进行"],
+    stopChordSequence: ["Остановить прогрессию", "Stop progression", "Akkordfolge stoppen", "Detener progresión", "Arrêter la progression", "Зупинити прогресію", "進行を停止", "停止和弦进行"],
+    openChordVoicings: ["Аппликатуры {chord}", "{chord} voicings", "Griffe für {chord}", "Posiciones de {chord}", "Positions de {chord}", "Аплікатури {chord}", "{chord} のボイシング", "{chord} 的指法"],
+    chordAddToSearch: ["Добавить в поиск", "Add to search", "Zur Suche hinzufügen", "Añadir a la búsqueda", "Ajouter à la recherche", "Додати до пошуку", "検索に追加", "加入搜索"],
+    chordShapeNumber: ["Аппликатура {number}", "Voicing {number}", "Griff {number}", "Posición {number}", "Position {number}", "Аплікатура {number}", "ボイシング {number}", "指法 {number}"],
+    chordPlayShape: ["Сыграть аппликатуру {number}", "Play voicing {number}", "Griff {number} spielen", "Tocar posición {number}", "Jouer la position {number}", "Зіграти аплікатуру {number}", "ボイシング {number} を再生", "播放指法 {number}"],
+    chordShapeOmissions: ["Без нот: {notes}", "Omitted notes: {notes}", "Ausgelassene Töne: {notes}", "Notas omitidas: {notes}", "Notes omises : {notes}", "Без нот: {notes}", "省略音：{notes}", "省略音：{notes}"],
+    chordNoVoicing: ["В этом строе не найдено аппликатур с таким басом в пределах выбранных ладов.", "No voicing with this bass fits the current tuning and fret range.", "In dieser Stimmung und im gewählten Bundbereich gibt es keinen Griff mit diesem Bass.", "No hay posiciones con ese bajo para esta afinación y rango de trastes.", "Aucune position avec cette basse dans cet accordage et cette plage de cases.", "У цьому строї немає аплікатур із таким басом у межах вибраних ладів.", "現在のチューニングとフレット範囲では、このベース音を持つ押さえ方が見つかりません。", "当前调弦和品位范围内没有使用此低音的指法。"],
+    chordStringPosition: ["{string}, {position}", "{string}, {position}", "{string}, {position}", "{string}, {position}", "{string}, {position}", "{string}, {position}", "{string}、{position}", "{string}，{position}"],
+    chordStringMuted: ["приглушить", "mute", "dämpfen", "silenciar", "étouffer", "приглушити", "ミュート", "闷音"],
+    chordStringLegend: ["0 — открытая струна, × — приглушить, число — лад.", "0 — open string, × — mute, number — fret.", "0 — leere Saite, × — dämpfen, Zahl — Bund.", "0 — cuerda al aire, × — silenciar, número — traste.", "0 — corde à vide, × — étouffer, nombre — case.", "0 — відкрита струна, × — приглушити, число — лад.", "0 は開放弦、× はミュート、数字はフレット。", "0 表示空弦，× 表示闷音，数字表示品位。"],
+};

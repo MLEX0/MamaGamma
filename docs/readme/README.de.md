@@ -8,11 +8,11 @@
 
 Finde Tonleitern anhand von Noten, Akkorden oder Audio. Übe die Tonleitern auf dem virtuellen Griffbrett oder den Klaviertasten.
 
-**Version 1.12.0** · Android 8.0 oder neuer · Analyse auf dem Gerät
+**Version 1.13.0** · Android 8.0 oder neuer · Analyse auf dem Gerät
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">APK herunterladen</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Versionshinweise</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.13.0/Mama-Gamma-1.13.0.apk">APK herunterladen</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.13.0">Versionshinweise</a>
 </p>
 
 ## Schnellstart
@@ -32,14 +32,23 @@ Finde Tonleitern anhand von Noten, Akkorden oder Audio. Übe die Tonleitern auf 
 
 - **Noten.** Tippe auf die Töne einer Melodie. Wechsle bei Bedarf zwischen **Griffbrett** und **Klaviertasten**. Die ausgewählte Note wird in allen Oktaven markiert. Tippe erneut darauf, um die Auswahl aufzuheben. Vorschläge zeigen, welche Töne du hinzufügen kannst.
 - **Akkordfolgen aus Noten.** Wähle unter **Noten** einen oder mehrere Töne und wechsle in den Ergebnissen zu **Akkordfolgen**. Die App schlägt Akkordfolgen in Dur und natürlichem Moll vor. Jeder gewählte Ton kommt in mindestens einem Akkord pro Folge vor und wird unter den passenden Akkorden angezeigt.
-- **Akkorde.** Gib Akkorde wie `Dm7 | G7 | Cmaj7` ein. Verwende Leerzeichen, Gedankenstriche, senkrechte Striche oder Zeilenumbrüche als Trennzeichen. Gibt es keine exakte Übereinstimmung, zeigt die App die nächsten Treffer und markiert Akkorde außerhalb der Tonleiter. Tippe auf **Tonleitern finden** und öffne in den Ergebnissen **Akkordfolgen**, um Vorschläge für die nächsten Akkorde zu sehen. Auf `Dm7 – G7` kann zum Beispiel `C` folgen.
-- **Audio.** Nimm mit **Aufnehmen** einen Ausschnitt auf und beende die Aufnahme mit **Stoppen und analysieren**. Öffne über **Datei auswählen** eine MP3-, WAV- oder AAC-kodierte M4A-Datei. Aus anderen Apps kannst du eine Datei über **Teilen → Mama Gamma** übergeben. Die App analysiert die ersten 20 Sekunden und zeigt bis zu drei wahrscheinliche Dur- oder Molltonarten. Unter **Akkordfolgen** findest du anschließend Begleitideen in den ermittelten Tonarten.
+- **Akkorde.** Gib Akkorde wie `Dm7 | G7 | Cmaj7` ein. Verwende Leerzeichen, Gedankenstriche, senkrechte Striche oder Zeilenumbrüche als Trennzeichen. Gibt es keine exakte Übereinstimmung, zeigt die App die nächsten Treffer und markiert Akkorde außerhalb der Tonleiter. Tippe auf **Tonleitern finden** und öffne in den Ergebnissen **Akkordfolgen**, um Vorschläge für die nächsten Akkorde zu sehen. Auf `Dm7 – G7` kann zum Beispiel `C` folgen. Tippe auf einen Akkord, um ihn anzuhören und seine Töne zu sehen. **Akkordfolge spielen** hebt beim Abspielen den aktuellen Akkord hervor.
+- **Audio.** Tippe auf **Aufnehmen**. Wellenform und Timer laufen während der bis zu zwei Minuten langen Aufnahme mit. Tippe auf **Stoppen und analysieren** und dann auf **WAV speichern**, um die Aufnahme zu behalten. Öffne über **Datei auswählen** eine MP3-, WAV- oder AAC-kodierte M4A-Datei oder verwende **Teilen → Mama Gamma** in einer anderen App.
+- **Ausschnitt wählen.** Die erste Analyse beginnt am Dateianfang und umfasst bis zu 20 Sekunden. Verschiebe die Auswahl auf der Wellenform, ziehe an einem Rand oder gib Start und Ende ein. Mit **+** und **−** änderst du den Maßstab. Wähle höchstens 20 Sekunden und tippe auf **Ausschnitt analysieren**. Bei langen Dateien erscheint die Wellenform nach und nach.
+- **Audioergebnisse.** Die App zeigt bis zu drei wahrscheinliche Tonarten und eine Folge erkannter dominanter Töne mit Zeitangaben. Eine einzelne Stimme oder ein Instrument lässt sich besser erkennen. Öffne **Akkordfolgen** für Begleitideen oder tippe auf **Löschen**, um die aktuelle Suche zurückzusetzen.
 
 <p align="center">
   <img src="../media/de/notes.webp" width="255" alt="Notensuche auf dem Griffbrett">
   <img src="../media/de/progressions.webp" width="255" alt="Vorgeschlagene Fortsetzungen nach C, G, Am und F">
   <img src="../media/de/audio.webp" width="255" alt="Ergebnis der Analyse einer M4A-Datei">
 </p>
+
+## Werkzeuge
+
+Wechsle in der unteren Leiste zwischen **Tonleitersuche** und **Werkzeuge**. Die Suchergebnisse bleiben erhalten.
+
+- **Akkordbibliothek.** Suche nach einem Akkordsymbol oder wähle Grundton und Akkordtyp. Wähle einen Basston für eine Umkehrung. Sieh dir die verfügbaren Griffe für Gitarre, Bass, Ukulele, Mandoline und Klavier an und höre sie dir an. Bei Saiteninstrumenten entsprechen die Griffe der Stimmung, und die Töne setzen leicht versetzt ein.
+- **Stimmgerät.** Tippe auf **Mikrofon einschalten**. Stimme chromatisch oder wähle eine Saite des aktuellen Instruments. Die Anzeige zeigt Ton, Frequenz und Abweichung in Cent.
 
 ## Griffbrett und Einstellungen
 
@@ -52,6 +61,8 @@ Unter **Klaviertasten** hebt die Vollbildansicht die Töne der Tonleiter auf der
 <p align="center">
   <img src="../media/de/piano.webp" width="760" alt="C-Dur auf den Klaviertasten im Querformat">
 </p>
+
+**Abspielen** spielt die Tonleiter bis zum nächsten Grundton und markiert die erklingenden Töne. In den Einstellungen kannst du 50 bis 180 BPM, die Startoktave und eine bis fünf Oktaven wählen. Wische über die Tasten oder tippe auf einen Oktavbereich, um ihn anzuzeigen.
 
 - **Instrument und Stimmung.** Wähle Gitarre, Bass, Ukulele oder Mandoline. Stelle die leeren Saiten ein und wähle 12 bis 36 Bünde.
 - **Klang und Design.** Regle die Lautstärke der Noten, schalte sie stumm oder wähle ein helles, dunkles oder systemgesteuertes Design. **Note anhören** spielt die nächste Stufe der aktuellen Tonleiter.
@@ -68,7 +79,7 @@ Unter **Klaviertasten** hebt die Vollbildansicht die Töne der Tonleiter auf der
 
 ### Fertige APK installieren
 
-Lade `Mama-Gamma-1.12.0.apk` über den Link oben auf dein Android-Gerät. Wenn du die App selbst erstellt hast, übertrage `app-debug.apk`. Öffne die Datei, tippe auf **Installieren** und starte Mama Gamma. Wenn Android nach einer Berechtigung fragt, erlaube der App, mit der du die APK öffnest, die Installation aus dieser Quelle.
+Lade `Mama-Gamma-1.13.0.apk` über den Link oben auf dein Android-Gerät. Wenn du die App selbst erstellt hast, übertrage `app-debug.apk`. Öffne die Datei, tippe auf **Installieren** und starte Mama Gamma. Wenn Android nach einer Berechtigung fragt, erlaube der App, mit der du die APK öffnest, die Installation aus dieser Quelle.
 
 ### APK aus dem Quellcode erstellen
 

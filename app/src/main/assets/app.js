@@ -21,21 +21,25 @@ const audioPanel = byId("audio-search");
 const audioRecord = byId("audio-record");
 const audioFile = byId("audio-file");
 const audioCancel = byId("audio-cancel");
+const audioClear = byId("audio-clear");
 const audioStatus = byId("audio-status");
 const audioFileInfo = byId("audio-file-info");
 const audioFileName = byId("audio-file-name");
 const audioFileDetails = byId("audio-file-details");
 const audioBridge = window.MamaGammaAudio;
+const audioEditor = createAudioSegment(audioBridge);
 const audioStatusKeys = {
     requesting: "microphoneRequest",
     choosing: "audioFileChoosing",
     recording: "audioRecording",
     analyzing: "audioAnalyzing",
+    saving: "audioSaving",
 };
 const chordForm = byId("chord-search");
 const chordInput = byId("chord-input");
 const chordTextLimit = chordInput.maxLength;
 const chordError = byId("chord-error");
+const chordPreview = byId("chord-preview");
 const resetChords = byId("reset-chords");
 const picker = byId("scale-picker");
 const scaleOpen = byId("scale-open");
@@ -74,6 +78,7 @@ const scaleCatalog = new Map(match([]).map(scale => [scale.id, scale]));
 let audioPhase = "idle";
 let audioMessage = "";
 let audioSource = "file";
+let audioAvailable = false;
 let chordValidation = null;
 let notesHistoryTimer = null;
 let analyzedChords = session.chordAnalyzed ? ChordFinder.parse(session.chordText).chords : [];
@@ -88,6 +93,7 @@ let detailOpener = null;
 let detailScale = null;
 let detailScrollFret = null;
 let scalePlaybackButton = null;
+let chordSequenceButton = null;
 
 function restore() {
     let saved;
@@ -116,6 +122,7 @@ function restore() {
         audioScale: saved.audioScale || null,
         audioKeys: Array.isArray(saved.audioKeys) ? saved.audioKeys.filter(isAudioKey).slice(0, 3) : [],
         audioFile: readAudioFile(saved.audioFile),
+        audioAnalysis: readAudioAnalysis(saved.audioAnalysis),
         detailFrom: Number.isInteger(saved.detailFrom) && saved.detailFrom >= 0 ? saved.detailFrom : 0,
         detailTo: Number.isInteger(saved.detailTo) && saved.detailTo >= 0 ? saved.detailTo : null,
         mode: ["notes", "chords", "audio"].includes(saved.mode) ? saved.mode : "notes",
@@ -139,7 +146,19 @@ function readAudioFile(value) {
         codec: typeof value.codec === "string" ? value.codec.slice(0, 16) : "",
         size: Number.isFinite(value.size) ? value.size : -1,
         durationMs: Number.isFinite(value.durationMs) ? value.durationMs : -1,
+        recording: value.recording === true,
     };
+}
+
+function readAudioAnalysis(value) {
+    if (!value || !Array.isArray(value.notes) || !Number.isFinite(value.fromMs)
+        || !Number.isFinite(value.toMs) || value.fromMs < 0 || value.toMs <= value.fromMs) return null;
+    const notes = value.notes.slice(0, 400).filter(note => note && Number.isInteger(note.midi)
+        && note.midi >= 0 && note.midi <= 127 && Number.isFinite(note.startMs) && Number.isFinite(note.endMs)
+        && note.startMs >= value.fromMs && note.endMs <= value.toMs && note.endMs > note.startMs)
+        .map(({ midi, startMs, endMs }) => ({ midi, startMs, endMs }))
+        .sort((left, right) => left.startMs - right.startMs);
+    return { fromMs: value.fromMs, toMs: value.toMs, notes };
 }
 
 function audioDuration(ms) {
@@ -197,6 +216,7 @@ function element(tag, className, value) {
 
 function showDialog(dialog) {
     stopScalePlayback();
+    stopChordSequence();
     dialog.showModal();
     document.documentElement.classList.add("modal-open");
 }
@@ -429,6 +449,7 @@ function openDetailFretboard() {
 }
 
 function openDetail(scale, opener) {
+    WorkspaceNavigation.showFinder();
     stopScalePlayback();
     flushNotesHistory(scale);
     finderPosition = window.scrollY;
@@ -445,6 +466,7 @@ function openDetail(scale, opener) {
     finder.hidden = true;
     finderHeader.hidden = true;
     scaleView.hidden = false;
+    WorkspaceNavigation.setFullscreen(true);
     window.scrollTo(0, 0);
     if (session.pianoMode) {
         detailPiano.build(true);
@@ -478,6 +500,7 @@ function closeScaleView() {
     if (!session.pianoMode) detailScrollFret = detailBoard.leadingFret();
     if (window.GammaMamaAppearance) window.GammaMamaAppearance.setScaleFullscreen(false);
     scaleView.hidden = true;
+    WorkspaceNavigation.setFullscreen(false);
     finderHeader.hidden = false;
     finder.hidden = false;
     window.scrollTo(0, finderPosition);
@@ -564,27 +587,98 @@ function renderProgressions() {
         const heading = element("div", "progression-heading");
         heading.appendChild(element("h3", "progression-key", scale.name));
         if (approximate) heading.appendChild(element("span", "progression-key-hint", t("progressionApproximateKey")));
-        card.appendChild(heading);
-        const sequence = element("ol", "progression-chords");
-        chords.forEach(({ root, suffix, degree, pitches }) => {
-            const chord = element("li", "progression-chord");
-            // In minor, the unaltered scale degrees can also be written without the relative-major flats.
-            chord.appendChild(element("span", "progression-degree", NoteNames.sharpsOnly() ? degree.replace(/^♭/, "") : degree));
-            chord.appendChild(element("strong", "progression-chord-name", NoteNames.name(root) + suffix));
-            const notes = selected.filter(pitch => pitches.includes(pitch)).map(pitch => NoteNames.name(pitch)).join(" · ");
-            if (notes) {
-                const badge = element("span", "progression-notes", notes);
-                badge.title = t("progressionMatches", { notes });
-                chord.appendChild(badge);
-            }
-            sequence.appendChild(chord);
-        });
-        card.appendChild(sequence);
+        const sequence = buildChordSequence(chords, selected);
+        heading.appendChild(sequence.play);
+        card.append(heading, sequence.list);
         results.appendChild(card);
     });
 }
 
+function stopChordSequence() {
+    if (chordSequenceButton) NoteAudio.stop();
+}
+
+function chordInstrument() {
+    return session.pianoMode ? "piano" : FretSettings.instrument().id;
+}
+
+function updateChordPlaybackControls() {
+    const disabled = !NoteAudio.canPlay();
+    document.querySelectorAll(".chord-hear, .chord-sequence-play").forEach(button => { button.disabled = disabled; });
+}
+
+function buildChordSequence(chords, selected = []) {
+    const list = element("ol", "progression-chords playable-chords");
+    const play = element("button", "secondary-button chord-sequence-play", t("playChordSequence"));
+    const audible = NoteAudio.canPlay();
+    play.type = "button";
+    play.disabled = !audible;
+    const cards = chords.map(chord => {
+        const card = element("li", "progression-chord");
+        const name = ChordLibrary.name(chord);
+        const hear = element("button", "chord-hear");
+        hear.type = "button";
+        hear.disabled = !audible;
+        hear.setAttribute("aria-label", t("playChord", { chord: name }));
+        if (chord.degree) {
+            const degree = NoteNames.sharpsOnly() ? chord.degree.replace(/^♭/, "") : chord.degree;
+            hear.appendChild(element("span", "progression-degree", degree));
+        }
+        hear.append(element("strong", "progression-chord-name", name),
+            element("span", "chord-note-list", ChordLibrary.noteNames(chord).join(" · ")));
+        hear.addEventListener("click", () => ChordLibrary.play(chord, chordInstrument()));
+        const notes = selected.filter(pitch => chord.pitches.includes(pitch)).map(pitch => NoteNames.name(pitch)).join(" · ");
+        if (notes) {
+            const badge = element("span", "progression-notes", notes);
+            badge.title = t("progressionMatches", { notes });
+            hear.appendChild(badge);
+        }
+        const voicings = element("button", "chord-show-shapes", "⋯");
+        voicings.type = "button";
+        voicings.title = t("openChordVoicings", { chord: name });
+        voicings.setAttribute("aria-label", voicings.title);
+        voicings.addEventListener("click", () => ChordLibrary.open(chord, chordInstrument()));
+        card.append(hear, voicings);
+        list.appendChild(card);
+        return card;
+    });
+    play.addEventListener("click", () => {
+        if (chordSequenceButton === play) {
+            stopChordSequence();
+            return;
+        }
+        stopChordSequence();
+        stopScalePlayback();
+        chordSequenceButton = play;
+        play.textContent = t("stopChordSequence");
+        let active;
+        ChordLibrary.playProgression(chords, index => {
+            active?.classList.remove("chord-sounding");
+            active = cards[index];
+            active?.classList.add("chord-sounding");
+            if (list.scrollWidth > list.clientWidth && active) {
+                list.scrollLeft += active.getBoundingClientRect().left - list.getBoundingClientRect().left;
+            }
+        }, () => {
+            active?.classList.remove("chord-sounding");
+            play.textContent = t("playChordSequence");
+            chordSequenceButton = null;
+        }, chordInstrument());
+    });
+    return { list, play };
+}
+
+function renderChordPreview() {
+    chordPreview.hidden = session.mode !== "chords" || !analyzedChords.length;
+    chordPreview.textContent = "";
+    if (chordPreview.hidden) return;
+    const sequence = buildChordSequence(analyzedChords);
+    chordPreview.append(sequence.play, sequence.list);
+}
+
 function renderResults() {
+    stopChordSequence();
+    renderChordPreview();
     const progressions = isProgressionView();
     scaleResults.setAttribute("aria-pressed", String(!progressions));
     progressionResults.setAttribute("aria-pressed", String(progressions));
@@ -661,6 +755,7 @@ function updateActiveResult() {
 
 function changeMode(mode) {
     stopScalePlayback();
+    stopChordSequence();
     if (session.mode === "notes" && mode !== "notes") flushNotesHistory();
     if (session.mode === "audio" && mode !== "audio") cancelAudioSearch();
     session.mode = mode;
@@ -679,42 +774,58 @@ function changeMode(mode) {
 }
 
 function audioBusy() {
-    return ["requesting", "choosing", "recording", "analyzing"].includes(audioPhase);
+    return ["requesting", "choosing", "recording", "analyzing", "saving"].includes(audioPhase);
 }
 
 function openSharedAudio() {
     Array.from(document.querySelectorAll("dialog[open]")).reverse().forEach(dialog => dialog.close());
     closeScaleView();
+    WorkspaceNavigation.showFinder();
     NoteAudio.stop();
     audioSource = "shared";
-    session.audioKeys = [];
-    session.audioScale = null;
-    session.audioFile = null;
-    renderAudioFile();
+    resetAudioState();
     changeMode("audio");
     window.scrollTo(0, 0);
 }
 
 function cancelAudioSearch() {
-    if (!audioBridge || !audioBusy()) return false;
+    if (!audioBridge || !audioBusy() || audioPhase === "saving") return false;
     audioBridge.cancel();
     return true;
 }
 
+function resetAudioState() {
+    audioPhase = "idle";
+    audioMessage = "";
+    audioAvailable = false;
+    session.audioFile = null;
+    session.audioAnalysis = null;
+    session.audioKeys = [];
+    session.audioScale = null;
+    renderAudioFile();
+    renderAudioControls();
+}
+
 function renderAudioControls() {
     const recording = audioPhase === "recording";
+    audioEditor.renderRecording(recording);
     const busy = audioBusy();
     audioRecord.textContent = t(recording ? "stopAndAnalyze" : "recordAudio");
     audioRecord.disabled = !audioBridge || (busy && !recording);
     audioFile.disabled = !audioBridge || busy;
     audioCancel.hidden = !recording && audioPhase !== "analyzing";
+    audioClear.disabled = !audioBridge || (!busy && !session.audioFile && !session.audioAnalysis
+        && !session.audioKeys.length && !audioMessage);
+    audioEditor.render(session.audioFile, audioAvailable, busy);
+    audioEditor.renderMelody(session.audioAnalysis);
     const status = audioMessage || audioStatusKeys[audioPhase];
     audioStatus.textContent = status ? t(status) : "";
     audioStatus.hidden = !audioStatus.textContent;
     audioStatus.classList.toggle("chord-error", audioPhase === "error");
 }
 
-function updateAudioSearch(phase, keys, message, file) {
+function updateAudioSearch(phase, keys, message, file, analysis) {
+    const previousPhase = audioPhase;
     audioPhase = phase;
     audioMessage = message;
     if (phase === "recording" && session.mode !== "audio") {
@@ -723,21 +834,30 @@ function updateAudioSearch(phase, keys, message, file) {
     }
     const recording = phase === "recording";
     if (recording) audioSource = "microphone";
-    if (phase === "choosing") audioSource = "file";
-    renderAudioControls();
-
-    if (recording || phase === "analyzing") {
+    if (phase === "analyzing" && previousPhase === "choosing") audioSource = "file";
+    const cleared = phase === "idle" && !file;
+    if (file || cleared || recording || phase === "analyzing") {
+        audioAvailable = file?.available === true;
         session.audioFile = readAudioFile(file);
         renderAudioFile();
     }
-    if (recording || phase === "analyzing" || phase === "done") {
-        session.audioKeys = phase === "done" ? Array.from(new Set(keys.filter(isAudioKey))).slice(0, 3) : [];
+    if (cleared || recording || phase === "analyzing" || phase === "done" || (phase === "error" && analysis)) {
+        session.audioKeys = Array.isArray(keys) ? Array.from(new Set(keys.filter(isAudioKey))).slice(0, 3) : [];
+        session.audioAnalysis = readAudioAnalysis(analysis);
         session.audioScale = null;
         if (session.mode === "audio") updateMatches();
         else persist();
+    } else if (file) {
+        persist();
     }
-    if (phase === "done") {
-        recordSearch(audioSource, session.audioFile?.name || "", session.audioKeys.map(id => scaleCatalog.get(id)));
+    renderAudioControls();
+    if (phase === "done" && session.audioKeys.length) {
+        const analyzed = session.audioAnalysis;
+        const name = session.audioFile?.name || "";
+        const query = analyzed && analyzed.fromMs > 0
+            ? `${name} · ${audioEditor.time(analyzed.fromMs)}–${audioEditor.time(analyzed.toMs)}` : name;
+        recordSearch(session.audioFile?.recording ? "microphone" : audioSource, query,
+            session.audioKeys.map(id => scaleCatalog.get(id)));
     }
 }
 
@@ -787,6 +907,16 @@ function updateChordInput() {
 function setChordAnalysis(chords) {
     analyzedChords = chords;
     chordMatches = ChordFinder.match(chords);
+}
+
+function insertLibraryChord(chord) {
+    const sequence = [chordInput.value.trim(), ChordLibrary.name(chord)].filter(Boolean).join(" – ");
+    if (sequence.length > chordInput.maxLength) return;
+    WorkspaceNavigation.showFinder();
+    if (session.mode !== "chords") changeMode("chords");
+    chordInput.value = sequence;
+    updateChordInput();
+    chordForm.scrollIntoView({ block: "nearest" });
 }
 
 chordInput.addEventListener("input", updateChordInput);
@@ -851,6 +981,12 @@ audioFile.addEventListener("click", () => {
     audioBridge.pickFile();
 });
 audioCancel.addEventListener("click", cancelAudioSearch);
+audioClear.addEventListener("click", () => {
+    NoteAudio.stop();
+    resetAudioState();
+    updateMatches();
+    audioBridge.clear();
+});
 if (!audioBridge) updateAudioSearch("error", [], "audioAndroidOnly");
 picker.addEventListener("change", () => setPreview(picker.value));
 scalePlay.addEventListener("click", () => playScale(activeScale, scalePlay, session.pianoMode ? mainPiano : mainBoard));
@@ -868,7 +1004,12 @@ detailTo.addEventListener("change", () => {
     setDetailFrets(Math.min(to, Number(detailFrom.value)), to, detailBoard.leadingFret());
 });
 document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && !document.querySelector("dialog[open]") && dismissScaleView()) event.preventDefault();
+    if (event.key === "Escape" && !document.querySelector("dialog[open]")
+        && (dismissScaleView() || WorkspaceNavigation.showFinder())) event.preventDefault();
+});
+byId("workspace-tools").addEventListener("click", () => {
+    if (audioPhase === "recording") audioBridge.recordOrStop();
+    else if (audioPhase === "requesting") cancelAudioSearch();
 });
 reset.addEventListener("click", () => {
     flushNotesHistory();
@@ -1006,10 +1147,15 @@ FretSettings.init(refreshSetup, enabled => {
     if (!enabled) NoteAudio.stop();
     renderBoard();
     renderScalePlayback();
+    audioEditor.renderMelody(session.audioAnalysis);
+    updateChordPlaybackControls();
 }, () => {
     NoteAudio.updateVolume();
     renderScalePlayback();
+    audioEditor.renderMelody(session.audioAnalysis);
+    updateChordPlaybackControls();
 }, previewVolume, refreshInterface, refreshNotation);
+ChordLibrary.init(showDialog, insertLibraryChord, chordInstrument);
 renderAudioControls();
 renderAudioFile();
 changeMode(session.mode);

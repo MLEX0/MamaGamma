@@ -19,14 +19,28 @@ final class AudioFileInfo {
     private final String codec;
     private final long size;
     private final long durationMs;
+    private final boolean recording;
 
     private AudioFileInfo(String name, String format, String codec, long size, long durationMs) {
+        this(name, format, codec, size, durationMs, false);
+    }
+
+    private AudioFileInfo(String name, String format, String codec, long size, long durationMs, boolean recording) {
         this.name = name;
         this.format = format;
         this.codec = codec;
         this.size = size;
         this.durationMs = durationMs;
+        this.recording = recording;
     }
+
+    static AudioFileInfo recording(String name, long size, long durationMs) {
+        return new AudioFileInfo(name, "WAV", "PCM", size, durationMs, true);
+    }
+
+    long durationMs() { return durationMs; }
+
+    String name() { return name; }
 
     static AudioFileInfo read(Context context, Uri uri) {
         ContentResolver resolver = context.getContentResolver();
@@ -92,6 +106,8 @@ final class AudioFileInfo {
         data.put("codec", codec);
         data.put("size", size);
         data.put("durationMs", durationMs);
+        data.put("recording", recording);
+        data.put("available", true);
         return new JSONObject(data);
     }
 }

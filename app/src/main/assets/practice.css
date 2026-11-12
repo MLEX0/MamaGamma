@@ -1,0 +1,256 @@
+:root {
+    --workspace-nav-inset: max(6px, env(safe-area-inset-bottom, 0px));
+    --workspace-nav-height: calc(51px + var(--workspace-nav-inset));
+    scroll-padding-bottom: calc(var(--workspace-nav-height) + 8px);
+}
+
+.finder { padding-bottom: calc(var(--workspace-nav-height) + 24px); }
+
+.workspace-nav {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 4;
+    padding: 6px 16px var(--workspace-nav-inset);
+    border-top: 1px solid var(--border);
+    background: var(--topbar);
+}
+
+.workspace-nav-inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.workspace-nav button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.workspace-nav button[aria-current="page"] {
+    border-color: var(--accent-border);
+    background: var(--accent-wash);
+    color: var(--accent-text);
+}
+
+.workspace-nav button:active, .music-tool:active { background: var(--accent-surface); }
+
+.workspace-search-icon {
+    position: relative;
+    flex: none;
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+}
+
+.workspace-search-icon::after {
+    content: "";
+    position: absolute;
+    inset: auto -4px -2px auto;
+    width: 6px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+
+.workspace-tools-icon {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    background:
+        linear-gradient(currentColor, currentColor) top left / 6px 6px no-repeat,
+        linear-gradient(currentColor, currentColor) top right / 6px 6px no-repeat,
+        linear-gradient(currentColor, currentColor) bottom left / 6px 6px no-repeat,
+        linear-gradient(currentColor, currentColor) bottom right / 6px 6px no-repeat;
+    border-radius: 1px;
+}
+
+.tools-workspace { padding-top: clamp(12px, 3vw, 24px); }
+
+.music-tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.music-tool {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    text-align: start;
+}
+
+.music-tool::after {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    margin-inline-end: 2px;
+    border-top: 2px solid var(--accent-text);
+    border-right: 2px solid var(--accent-text);
+    transform: rotate(45deg);
+}
+
+.music-tool-text { display: grid; gap: 4px; }
+.music-tool-text strong { font-size: 16px; }
+.music-tool-text > span { color: var(--muted); font-size: 13px; }
+
+.audio-segment, .audio-melody {
+    display: grid;
+    gap: 9px;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--wash);
+}
+
+.audio-range-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 7rem);
+    align-items: center;
+    gap: 4px 9px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.audio-range-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+.audio-range-fields .audio-range-row { grid-template-columns: 1fr; }
+
+.audio-range-row input[type="number"] {
+    width: 100%;
+    min-height: 40px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+}
+
+.audio-wave-editor { display: grid; gap: 8px; }
+.audio-live {
+    display: grid;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+}
+.audio-live-header { display: flex; align-items: center; gap: 9px; }
+.audio-live-header output { font-size: 27px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.audio-live-indicator { width: 9px; height: 9px; border-radius: 50%; background: #df5263; }
+.audio-live-bars { display: flex; align-items: center; justify-content: flex-end; gap: 1px; position: relative; height: 64px; overflow: hidden; }
+.audio-live-bars::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid var(--border); }
+.audio-live-bars i { flex: 0 0 2px; border-radius: 2px; background: #df5263; }
+.audio-wave-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.audio-wave-heading span { display: block; color: var(--muted); font-size: 12px; }
+.audio-wave-heading output { display: block; font-size: 28px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.audio-wave-zoom { display: flex; gap: 5px; }
+.audio-wave-zoom button { min-width: 42px; min-height: 42px; font-size: 20px; }
+.audio-wave-frame { padding: 8px 21px 5px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.audio-wave-track {
+    position: relative;
+    height: 80px;
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
+}
+.audio-wave-track:active { cursor: grabbing; }
+.audio-wave-track.audio-wave-busy { cursor: default; opacity: .65; }
+.audio-wave-bars, .audio-wave-selection { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.audio-wave-bars { display: flex; align-items: center; gap: 1px; z-index: 1; }
+.audio-wave-bars::before { content: ""; position: absolute; inset: 50% 0 auto; border-top: 1px solid var(--border); }
+.audio-wave-bars i { flex: 1; min-width: 0; border-radius: 2px; background: var(--accent-text); opacity: .75; }
+.audio-wave-selection { background: var(--accent-wash); border-block: 1px solid var(--accent-border); pointer-events: none; }
+.audio-wave-handle {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    bottom: 0;
+    width: 21px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px 0 0 5px;
+    background: var(--accent-fill);
+    color: var(--accent-ink);
+    cursor: ew-resize;
+}
+.audio-wave-handle.start { transform: translateX(-100%); }
+.audio-wave-handle.end { border-radius: 0 5px 5px 0; }
+.audio-wave-handle::after {
+    content: "";
+    position: absolute;
+    inset: 39% 7px;
+    border-inline: 1px solid currentColor;
+}
+.audio-wave-ticks { display: flex; justify-content: space-between; margin-top: 4px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+#audio-wave-pan {
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    accent-color: var(--focus);
+}
+
+.audio-melody h3 { font-size: 14px; }
+.audio-melody-notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+    max-height: 15rem;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+.audio-melody-notes:empty { display: none; }
+.audio-melody-notes li { display: grid; gap: 2px; text-align: center; }
+.melody-time { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+
+#chord-preview { display: grid; gap: 6px; }
+#chord-preview > .chord-sequence-play { justify-self: start; }
+.chord-sequence-play { margin-inline-start: auto; }
+.playable-chords { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.playable-chords .progression-chord { min-width: 84px; padding: 0; grid-template-rows: 1fr auto; align-content: stretch; }
+.playable-chords .progression-chord.chord-sounding { border-color: var(--focus); background: var(--accent-fill); color: var(--accent-ink); }
+.chord-sounding .progression-degree, .chord-sounding .chord-note-list { color: inherit; }
+.chord-hear, .chord-show-shapes {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    width: 100%;
+    min-height: 44px;
+    padding: 5px;
+    border: 0;
+    background: transparent;
+}
+.chord-hear { min-width: 0; border-radius: 6px 6px 0 0; }
+.chord-hear:active { background: var(--accent-surface); color: var(--accent-text); }
+.chord-note-list { color: var(--muted); font-size: 11px; line-height: 1.3; }
+.chord-show-shapes { border-top: 1px solid var(--border); color: var(--accent-text); font-size: 18px; }
+.chord-hear:focus-visible, .chord-show-shapes:focus-visible { outline-offset: -2px; }

@@ -7,12 +7,12 @@
 </p>
 
 <p align="center">
-  <strong>Version 1.12.0</strong> · Android 8.0 and later · Works offline
+  <strong>Version 1.13.0</strong> · Android 8.0 and later · Works offline
 </p>
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">Download APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Release notes</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.13.0/Mama-Gamma-1.13.0.apk">Download APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.13.0">Release notes</a>
 </p>
 
 <p align="center">
@@ -30,12 +30,13 @@
   <a href="#install">Install</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#find-a-scale">Find a scale</a> ·
+  <a href="#tools">Tools</a> ·
   <a href="#fretboard-and-settings">Fretboard and settings</a>
 </p>
 
 ## Quick start
 
-1. Open **By chords** and enter `C – G – Am – F`.
+1. Open **Scale finder → By chords** and enter `C – G – Am – F`.
 2. Tap **Find scales**. Select **C major** in the results to highlight its notes on the fretboard.
 3. Tap the expand button next to a result or double-tap its name. The fretboard opens in landscape.
 
@@ -56,7 +57,7 @@
 | --- | --- | --- |
 | A few notes from a melody | **By notes** | Scales that contain those notes and suggestions for the next note |
 | The chords of a song | **By chords** | Scales that fit the progression, with any out-of-scale chords listed |
-| A riff, recording, or song | **By audio** | Up to three likely major or minor keys |
+| A riff, recording, or song | **By audio** | Up to three likely major or minor keys and a timeline of detected notes |
 
 ### By notes
 
@@ -79,23 +80,32 @@ Paste a progression, such as `Dm7 | G7 | Cmaj7`, and tap **Find scales**. You ca
 
 Open **Progressions** in the results to see what could come next. For example, `C` can follow `Dm7 – G7`.
 
+Tap an entered or suggested chord to hear it and see its notes. Play the full progression to hear each chord as it is highlighted.
+
 ### By audio
 
 | Source | How to start |
 | --- | --- |
-| **Microphone** | Tap **Record**, allow microphone access, and play a short phrase. Tap **Stop and analyze** to finish early. |
+| **Microphone** | Tap **Record** and allow microphone access. Follow the live waveform and timer while recording for up to two minutes. Tap **Stop and analyze** when ready, then **Save WAV** to keep the recording. |
 | **File** | Tap **Choose file** and open an MP3, WAV, or AAC-encoded M4A file. |
 | **Telegram or another app** | Open Android's **Share** menu for an audio file and choose **Mama Gamma**. Analysis starts automatically. |
 
-The app analyzes up to 20 seconds on your device and shows available file details. If it returns several keys, open each scale and compare it with what you hear. For a quiet or short clip, try a passage with several clear notes or chords.
+The initial analysis uses the first 20 seconds or the entire clip if it is shorter. Drag the waveform selection to move it, pull either edge to resize it, or enter the start and end times. Use **+** and **−** to zoom. Select up to 20 seconds and tap **Analyze segment**. Long-file waveforms appear as audio is decoded.
 
-Once analysis finishes, open **Progressions** for harmony ideas in the estimated keys.
+The results show likely keys and detected dominant notes with timestamps. A recording of one voice or instrument makes the note sequence easier to detect. Open **Progressions** for accompaniment ideas or tap **Clear** to start another search.
 
 <p align="center">
   <img src="docs/media/en/notes.webp" width="255" alt="The notes C, E and G selected on the guitar fretboard">
   <img src="docs/media/en/progressions.webp" width="255" alt="Suggested chord continuations after C, G, Am and F">
   <img src="docs/media/en/audio.webp" width="255" alt="An M4A analysis result with its detected key and file details">
 </p>
+
+## Tools
+
+Switch between **Scale finder** and **Tools** in the bottom navigation. Your search stays in place when you switch.
+
+- **Chord library.** Search by chord symbol or choose a root and chord type. Select a bass note for an inversion. View and play the available voicings for guitar, bass guitar, ukulele, mandolin, or piano. String voicings follow the instrument tuning and are played with staggered attacks.
+- **Tuner.** Tap **Start microphone**. Tune chromatically or choose a string of the current instrument. The tuner shows the detected note, frequency, and deviation in cents.
 
 ## Fretboard and settings
 
@@ -105,13 +115,13 @@ Once analysis finishes, open **Progressions** for harmony ideas in the estimated
 2. In **Fretboard** mode, set the first and last fret, for example **5–12**. Swipe or use the arrows to move along the fretboard.
 3. Tap **Fretboard only** for a larger playing area. The **⋯** button in the top-left corner or Android **Back** brings back the controls.
 
-Tap a highlighted note to hear its pitch. The fretboard follows the selected instrument and tuning.
+Tap a highlighted note to hear its pitch. Tap **Play** to hear the scale up to the next tonic and follow the notes as they light up. Set the scale tempo from 50 to 180 BPM in Settings. The fretboard follows the selected instrument and tuning.
 
 <p align="center">
   <img src="docs/media/en/fretboard.webp" width="760" alt="C major on the full-screen guitar fretboard with frets 5 through 12 selected">
 </p>
 
-In **Piano keys** mode, the full-screen view highlights the scale across the keyboard.
+In **Piano keys** mode, the full-screen view highlights the scale across the keyboard. Set the starting octave and choose one to five octaves in Settings. Swipe or tap an octave range to scroll.
 
 <p align="center">
   <img src="docs/media/en/piano.webp" width="760" alt="C major on the piano keys in landscape">
@@ -153,7 +163,7 @@ Tap **History** in the top bar to see the last 100 successful searches on your d
 
 ### Install an APK
 
-1. Download `Mama-Gamma-1.12.0.apk` above on your Android device. If you built the app, copy `app-debug.apk` to the device.
+1. Download `Mama-Gamma-1.13.0.apk` above on your Android device. If you built the app, copy `app-debug.apk` to the device.
 2. Open the file. If Android prompts you, allow installs from the app you used to open it. [Android installation help](https://support.google.com/pixelphone/answer/7391672)
 3. Tap **Install**, then open **Mama Gamma**.
 

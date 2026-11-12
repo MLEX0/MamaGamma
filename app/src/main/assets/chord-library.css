@@ -1,0 +1,127 @@
+.chord-library {
+    width: min(560px, calc(100% - 24px));
+}
+
+.chord-library-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 6px 8px;
+}
+
+.chord-library-search label,
+.chord-library-search .chord-error {
+    grid-column: 1 / -1;
+}
+
+.chord-library-search label {
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.chord-library-search input {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+}
+
+.chord-library-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 8px;
+}
+
+.chord-library-result,
+.chord-shape-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.chord-library-result h3 {
+    font-size: 24px;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+}
+
+.chord-library-result p,
+.chord-library-guide,
+.chord-shape-omissions {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.chord-library-result p { margin-top: 3px; }
+.chord-library-play, .chord-shape-play { min-width: 44px; flex: none; }
+
+.chord-library-shapes {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.chord-shape {
+    min-width: 0;
+    display: grid;
+    gap: 7px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--wash);
+}
+
+.chord-shape h3 { font-size: 13px; }
+.chord-shape-play { min-height: 38px; }
+
+.chord-shape-strings {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.chord-shape-strings[data-strings="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.chord-shape-string {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 5px 1px;
+    border-radius: 6px;
+    background: var(--surface);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.chord-open-string { color: var(--muted); font-size: 11px; }
+.chord-fret-number { color: var(--accent-text); font-size: 19px; font-variant-numeric: tabular-nums; }
+.chord-voiced-note { color: var(--ink); font-size: 12px; font-weight: 650; }
+
+.chord-shape-keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.chord-shape-key {
+    min-height: 38px;
+    padding: 4px 8px;
+    border: 1px solid var(--accent-border);
+    border-radius: 6px;
+    background: var(--accent-wash);
+    color: var(--accent-text);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.chord-shape-key:disabled { opacity: .65; }

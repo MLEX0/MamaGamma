@@ -14,6 +14,9 @@ const ChordFinder = (() => {
     };
     const aliases = { maj: "", sus: "sus4", "7sus": "7sus4", "69": "6/9", "m6/9": "m69", "ø": "m7b5", "ø7": "m7b5" };
     const alterations = { b5: [7, 6], "#5": [7, 8], b9: [2, 1], "#9": [2, 3], "#11": [5, 6], b13: [9, 8] };
+    const commonTypes = ["", "m", "7", "maj7", "m7", "5", "dim", "aug", "sus2", "sus4"];
+    const suffixes = commonTypes.concat(Object.keys(formulas).filter(name => !commonTypes.includes(name)),
+        ["7", "9", "11", "13", "maj7", "m7"].flatMap(name => Object.keys(alterations).map(alteration => name + alteration)));
 
     function chordIntervals(suffix) {
         const quality = suffix.replace(/[()]/g, "")
@@ -29,6 +32,18 @@ const ChordFinder = (() => {
         return formulas[altered[1]].filter(interval => interval !== natural).concat(replacement);
     }
 
+    function build(root, suffix, bassPitch = null) {
+        const intervals = chordIntervals(suffix);
+        if (!intervals) return null;
+        const pitches = new Set(intervals.map(interval => ScaleFinder.pitchAt(root, interval)));
+        if (bassPitch !== null) pitches.add(bassPitch);
+        const bass = bassPitch === null ? null : { pitch: bassPitch };
+        return {
+            root, suffix, intervals, bass, pitches: [...pitches],
+            dominant: intervals.includes(4) && intervals.includes(10),
+        };
+    }
+
     function parseChord(label, mode) {
         const slash = label.lastIndexOf("/");
         const afterSlash = slash === -1 ? "" : label.slice(slash + 1);
@@ -38,13 +53,10 @@ const ChordFinder = (() => {
         for (const root of NoteNames.readRoots(label, mode)) {
             const suffix = label.slice(root.length, bass ? slash : label.length)
                 .trim().replace(/\s*\/\s*/g, "/").replace(/♯/g, "#").replace(/♭/g, "b").replace(/−/g, "-");
-            const intervals = chordIntervals(suffix);
-            if (!intervals) continue;
-            const pitches = new Set(intervals.map(interval => ScaleFinder.pitchAt(root.pitch, interval)));
-            if (bass) pitches.add(bass.pitch);
+            const chord = build(root.pitch, suffix, bass?.pitch ?? null);
+            if (!chord) continue;
             return {
-                label: label.replace(/\s*\/\s*/g, "/"), text: label, root: root.pitch,
-                pitches: [...pitches], dominant: intervals.includes(4) && intervals.includes(10),
+                ...chord, label: label.replace(/\s*\/\s*/g, "/"), text: label,
                 rootLength: root.length, bass,
                 bassStart: bass ? slash + 1 + afterSlash.length - afterSlash.trimStart().length : label.length,
             };
@@ -117,5 +129,5 @@ const ChordFinder = (() => {
         return scales.filter(scale => scale.outside.length === best.outside.length && scale.missing <= best.missing + (best.missing ? 1 : 0));
     }
 
-    return { parse, match, rewrite };
+    return { parse, match, rewrite, build, suffixes };
 })();

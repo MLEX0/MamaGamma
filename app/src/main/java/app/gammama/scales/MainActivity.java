@@ -1,11 +1,13 @@
 package app.gammama.scales;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -41,6 +43,7 @@ public final class MainActivity extends Activity {
     private static final int LIGHT_BACKGROUND = Color.rgb(246, 244, 250);
     private static final int DARK_BACKGROUND = Color.rgb(19, 18, 27);
     private static final String THEME = "theme";
+    private static final int TUNER_PERMISSION = 43;
 
     private FrameLayout frame;
     private ContextThemeWrapper webContext;
@@ -50,6 +53,9 @@ public final class MainActivity extends Activity {
     private AudioSearch audioSearch;
     private boolean audioPageReady;
     private Intent pendingAudioShare;
+    private TunerInput tuner;
+    private boolean tunerRequested;
+    private boolean tunerPermissionPending;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +82,10 @@ public final class MainActivity extends Activity {
         webView.getSettings().setAllowContentAccess(false);
         webView.getSettings().setBlockNetworkLoads(true);
         webView.addJavascriptInterface(new AppearanceBridge(), "GammaMamaAppearance");
-        audioSearch = new AudioSearch(this, this::sendAudioState);
+        audioSearch = new AudioSearch(this, this::sendAudioState, this::sendAudioWaveform, this::sendRecordingWaveform);
         webView.addJavascriptInterface(new AudioBridge(), "MamaGammaAudio");
+        tuner = new TunerInput(this::sendTunerState);
+        webView.addJavascriptInterface(new TunerBridge(), "MamaGammaTuner");
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
             WebView.setWebContentsDebuggingEnabled(true);
         }
@@ -131,6 +139,7 @@ public final class MainActivity extends Activity {
         if (!audioPageReady || pendingAudioShare == null) return;
         Intent share = pendingAudioShare;
         pendingAudioShare = null;
+        stopTuner();
         webView.evaluateJavascript("openSharedAudio();", null);
         audioSearch.analyzeSharedFile(sharedContentUri(share));
     }
@@ -244,18 +253,42 @@ public final class MainActivity extends Activity {
             runOnUiThread(() -> {
                 if (isDestroyed()) return;
                 audioPageReady = true;
+                if (pendingAudioShare == null) audioSearch.restorePage();
                 openPendingAudioShare();
             });
         }
 
         @JavascriptInterface
         public void recordOrStop() {
-            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.recordOrStop(); });
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                stopTuner();
+                audioSearch.recordOrStop();
+            });
         }
 
         @JavascriptInterface
         public void pickFile() {
-            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.pickFile(); });
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                stopTuner();
+                audioSearch.pickFile();
+            });
+        }
+
+        @JavascriptInterface
+        public void analyzeSegment(double fromMs, double toMs) {
+            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.analyzeSegment(fromMs, toMs); });
+        }
+
+        @JavascriptInterface
+        public void saveRecording() {
+            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.saveRecording(); });
+        }
+
+        @JavascriptInterface
+        public void clear() {
+            runOnUiThread(() -> { if (!isDestroyed()) audioSearch.clear(); });
         }
 
         @JavascriptInterface
@@ -264,18 +297,86 @@ public final class MainActivity extends Activity {
         }
     }
 
-    private void sendAudioState(String phase, List<String> keys, String message, AudioFileInfo file) {
+    private void sendAudioState(String phase, List<String> keys, String message, AudioFileInfo file, AudioSearch.Analysis analysis) {
         if (webView == null || isDestroyed()) return;
         String metadata = file == null ? "null" : file.toJson().toString()
                 .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029");
+        String segment = analysis == null ? "null" : analysis.toJson().toString();
         webView.evaluateJavascript("if (window.updateAudioSearch) window.updateAudioSearch("
                 + JSONObject.quote(phase) + "," + new JSONArray(keys) + "," + JSONObject.quote(message)
-                + "," + metadata + ");", null);
+                + "," + metadata + "," + segment + ");", null);
+    }
+
+    private void sendAudioWaveform(float[] peaks, long durationMs, boolean complete, long processedMs) {
+        if (webView == null || !audioPageReady || isDestroyed()) return;
+        webView.evaluateJavascript("if (window.updateAudioWaveform) window.updateAudioWaveform("
+                + waveformBars(peaks) + "," + durationMs + "," + complete + "," + processedMs + ");", null);
+    }
+
+    private void sendRecordingWaveform(float[] peaks, long elapsedMs) {
+        if (webView == null || !audioPageReady || isDestroyed()) return;
+        webView.evaluateJavascript("if (window.updateRecordingWaveform) window.updateRecordingWaveform("
+                + waveformBars(peaks) + "," + elapsedMs + ");", null);
+    }
+
+    private static JSONArray waveformBars(float[] peaks) {
+        JSONArray bars = new JSONArray();
+        for (float peak : peaks) bars.put(Double.valueOf(Math.round(peak * 1000) / 1000.0));
+        return bars;
+    }
+
+    public final class TunerBridge {
+        @JavascriptInterface
+        public void start() {
+            runOnUiThread(() -> {
+                if (isDestroyed() || tunerRequested) return;
+                tunerRequested = true;
+                audioSearch.cancel();
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    tuner.start();
+                    return;
+                }
+                sendTunerState("requesting", 0);
+                if (!tunerPermissionPending) {
+                    tunerPermissionPending = true;
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, TUNER_PERMISSION);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void stop() {
+            runOnUiThread(() -> { if (!isDestroyed()) stopTuner(); });
+        }
+    }
+
+    private void stopTuner() {
+        if (!tunerRequested) return;
+        tunerRequested = false;
+        if (tuner.running()) tuner.stop();
+        else sendTunerState("idle", 0);
+    }
+
+    private void sendTunerState(String state, double frequency) {
+        if ("error".equals(state)) tunerRequested = false;
+        if (webView == null || isDestroyed()) return;
+        webView.evaluateJavascript("if (window.updateTuner) window.updateTuner("
+                + JSONObject.quote(state) + "," + frequency + ");", null);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == TUNER_PERMISSION) {
+            tunerPermissionPending = false;
+            if (!tunerRequested) return;
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) tuner.start();
+            else {
+                tunerRequested = false;
+                sendTunerState("denied", 0);
+            }
+            return;
+        }
         audioSearch.onPermissionResult(requestCode, grantResults);
     }
 
@@ -286,8 +387,22 @@ public final class MainActivity extends Activity {
     }
 
     @Override
-    protected void onStop() {
+    protected void onPause() {
+        audioSearch.pauseWaveform();
+        if (tuner.running()) stopTuner();
         audioSearch.stopRecordingOnBackground();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        audioSearch.resumeWaveform();
+    }
+
+    @Override
+    protected void onStop() {
+        stopTuner();
         super.onStop();
     }
 
@@ -329,6 +444,7 @@ public final class MainActivity extends Activity {
         webView.evaluateJavascript("(() => {"
                 + " if (typeof dismissDialog === 'function' && dismissDialog()) return true;"
                 + " if (typeof dismissScaleView === 'function' && dismissScaleView()) return true;"
+                + " if (typeof WorkspaceNavigation !== 'undefined' && WorkspaceNavigation.showFinder()) return true;"
                 + " return typeof cancelAudioSearch === 'function' && cancelAudioSearch(); })()", closed -> {
             if (!"true".equals(closed) && !isDestroyed()) finish();
         });
@@ -339,11 +455,18 @@ public final class MainActivity extends Activity {
         switch (path) {
             case "/index.html": return "text/html";
             case "/styles.css":
+            case "/practice.css":
+            case "/chord-library.css":
+            case "/tuner.css":
             case "/piano.css": return "text/css";
             case "/brand.svg": return "image/svg+xml";
             case "/startup.js":
             case "/locale-ui.js":
             case "/locale-search.js":
+            case "/audio-locales.js":
+            case "/audio-segment.js":
+            case "/chord-locales.js":
+            case "/chord-library.js":
             case "/i18n.js":
             case "/notation.js":
             case "/scales.js":
@@ -354,6 +477,8 @@ public final class MainActivity extends Activity {
             case "/fretboard.js":
             case "/piano.js":
             case "/history.js":
+            case "/tuner.js":
+            case "/navigation.js":
             case "/app.js": return "text/javascript";
             default: return null;
         }
@@ -361,6 +486,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        tuner.destroy();
         audioSearch.destroy();
         if (webView != null) {
             ((ViewGroup) webView.getParent()).removeView(webView);

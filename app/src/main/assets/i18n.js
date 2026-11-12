@@ -16,6 +16,8 @@ const I18n = (() => {
     const messages = {
         ...UI_MESSAGES,
         ...SEARCH_MESSAGES,
+        ...AUDIO_SEGMENT_MESSAGES,
+        ...CHORD_MESSAGES,
         guitarName: ["Гитара", "Guitar", "Gitarre", "Guitarra", "Guitare", "Гітара", "ギター", "吉他"],
         bassName: ["Бас-гитара", "Bass guitar", "E-Bass", "Bajo eléctrico", "Basse électrique", "Бас-гітара", "ベース", "贝斯"],
         ukuleleName: ["Укулеле", "Ukulele", "Ukulele", "Ukelele", "Ukulélé", "Укулеле", "ウクレレ", "尤克里里"],

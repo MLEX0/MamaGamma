@@ -8,11 +8,11 @@
 
 Trouve des gammes à partir de notes, d’accords ou d’un enregistrement. Joue les gammes sur le manche virtuel ou le clavier de piano.
 
-**Version 1.12.0** · Android 8.0 ou version ultérieure · Analyse sur l’appareil
+**Version 1.13.0** · Android 8.0 ou version ultérieure · Analyse sur l’appareil
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">Télécharger l’APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Notes de version</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.13.0/Mama-Gamma-1.13.0.apk">Télécharger l’APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.13.0">Notes de version</a>
 </p>
 
 ## Démarrage rapide
@@ -32,14 +32,23 @@ Trouve des gammes à partir de notes, d’accords ou d’un enregistrement. Joue
 
 - **Par notes.** Touche les notes d’une mélodie. Choisis **Manche** ou **Clavier de piano** pour saisir les notes et afficher les gammes. Chaque note sélectionnée est mise en évidence dans toutes les octaves. Touche-la de nouveau pour la retirer. Les suggestions indiquent les notes que tu peux ajouter.
 - **Progressions à partir de notes.** Dans le mode **Par notes**, sélectionne une ou plusieurs notes, puis choisis **Progressions** dans les résultats. L’application propose des suites d’accords en majeur et en mineur naturel. Chaque note sélectionnée figure dans au moins un accord par progression et s’affiche sous les accords qui la contiennent.
-- **Par accords.** Saisis des accords comme `Dm7 | G7 | Cmaj7`. Sépare-les par des espaces, des tirets, des barres verticales ou des sauts de ligne. Si aucune gamme ne correspond exactement, l’application affiche les plus proches et signale les accords qui sortent de la gamme. Touche **Trouver les gammes**, puis ouvre **Progressions** dans les résultats pour voir quels accords pourraient suivre. Par exemple, `C` peut suivre `Dm7 – G7`.
-- **Par audio.** Enregistre un extrait avec **Enregistrer**, puis touche **Arrêter et analyser**. Tu peux aussi ouvrir un fichier MP3, WAV ou M4A encodé en AAC avec **Choisir un fichier**. Depuis une autre application, utilise **Partager → Mama Gamma**. L’analyse des 20 premières secondes fournit jusqu’à trois tonalités majeures ou mineures probables. Une fois l’analyse terminée, ouvre **Progressions** pour voir des idées d’accompagnement dans ces tonalités.
+- **Par accords.** Saisis des accords comme `Dm7 | G7 | Cmaj7`. Sépare-les par des espaces, des tirets, des barres verticales ou des sauts de ligne. Si aucune gamme ne correspond exactement, l’application affiche les plus proches et signale les accords qui sortent de la gamme. Touche **Trouver les gammes**, puis ouvre **Progressions** dans les résultats pour voir quels accords pourraient suivre. Par exemple, `C` peut suivre `Dm7 – G7`. Touche un accord pour l’écouter et voir ses notes. **Jouer la progression** joue la suite et met en évidence l’accord en cours.
+- **Par audio.** Touche **Enregistrer** et suis la forme d’onde et le compteur pendant une prise de deux minutes au maximum. Touche **Arrêter et analyser**, puis **Enregistrer le WAV** pour conserver la prise. Tu peux aussi ouvrir un fichier MP3, WAV ou M4A encodé en AAC avec **Choisir un fichier**, ou passer par **Partager → Mama Gamma** depuis une autre application.
+- **Choisir un extrait.** L’analyse initiale couvre jusqu’à 20 secondes à partir du début. Déplace la sélection sur la forme d’onde, tire sur un bord ou saisis les temps de début et de fin. Règle le zoom avec **+** et **−**. Sélectionne jusqu’à 20 secondes puis touche **Analyser l’extrait**. La forme d’onde des longs fichiers apparaît au fil du décodage.
+- **Résultats audio.** L’application affiche jusqu’à trois tonalités probables et la suite des notes dominantes détectées, avec leur temps. Une voix ou un instrument seul facilite la détection. Ouvre **Progressions** pour des idées d’accompagnement ou touche **Effacer** pour réinitialiser la recherche.
 
 <p align="center">
   <img src="../media/fr/notes.webp" width="255" alt="Recherche par notes sur le manche">
   <img src="../media/fr/progressions.webp" width="255" alt="Suites d’accords proposées après C, G, Am et F">
   <img src="../media/fr/audio.webp" width="255" alt="Résultat de l’analyse d’un fichier M4A">
 </p>
+
+## Outils
+
+Passe de la recherche de gammes aux **Outils** avec la barre du bas. Les résultats de recherche sont conservés.
+
+- **Bibliothèque d’accords.** Recherche un symbole ou choisis une fondamentale et un type d’accord. Sélectionne une note de basse pour un renversement. Consulte et écoute les positions proposées pour la guitare, la basse, le ukulélé, la mandoline et le piano. Sur les instruments à cordes, les positions suivent l’accordage choisi et les notes se déclenchent avec un léger décalage.
+- **Accordeur.** Touche **Activer le microphone**. Utilise le mode chromatique ou choisis une corde de l’instrument actif. L’accordeur affiche la note détectée, la fréquence et l’écart en cents.
 
 ## Manche et paramètres
 
@@ -52,6 +61,8 @@ En mode **Clavier de piano**, le plein écran met en évidence les notes de la g
 <p align="center">
   <img src="../media/fr/piano.webp" width="760" alt="Do majeur sur le clavier de piano en mode paysage">
 </p>
+
+**Jouer** joue la gamme jusqu’à la tonique suivante et met chaque note en évidence. Dans les paramètres, choisis un tempo de 50 à 180 BPM, l’octave de départ et une étendue d’une à cinq octaves. Balaye le clavier ou touche une plage d’octaves pour le déplacer.
 
 - **Instrument et accordage.** Choisis la guitare, la basse, le ukulélé ou la mandoline. Règle les cordes à vide et sélectionne de 12 à 36 cases.
 - **Son et thème.** Règle le volume des notes, coupe le son ou sélectionne le thème clair, sombre ou celui du système. **Écouter une note** joue le degré suivant de la gamme active.
@@ -68,7 +79,7 @@ En mode **Clavier de piano**, le plein écran met en évidence les notes de la g
 
 ### Installer l’APK
 
-Télécharge `Mama-Gamma-1.12.0.apk` sur ton appareil Android avec le lien ci-dessus. Si tu as compilé l’application, transfère `app-debug.apk` sur ton appareil. Ouvre le fichier, touche **Installer** et lance Mama Gamma. Si Android demande une autorisation, permets l’installation depuis l’application qui ouvre le fichier APK.
+Télécharge `Mama-Gamma-1.13.0.apk` sur ton appareil Android avec le lien ci-dessus. Si tu as compilé l’application, transfère `app-debug.apk` sur ton appareil. Ouvre le fichier, touche **Installer** et lance Mama Gamma. Si Android demande une autorisation, permets l’installation depuis l’application qui ouvre le fichier APK.
 
 ### Compiler l’APK depuis le code source
 

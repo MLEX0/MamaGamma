@@ -8,11 +8,11 @@
 
 Encuentra escalas a partir de notas, acordes o audio. Practica las escalas en el diapasón virtual o en las teclas de piano.
 
-**Versión 1.12.0** · Android 8.0 o posterior · Análisis en el dispositivo
+**Versión 1.13.0** · Android 8.0 o posterior · Análisis en el dispositivo
 
 <p align="center">
-  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.12.0/Mama-Gamma-1.12.0.apk">Descargar APK</a></strong> ·
-  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.12.0">Notas de la versión</a>
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.13.0/Mama-Gamma-1.13.0.apk">Descargar APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.13.0">Notas de la versión</a>
 </p>
 
 ## Inicio rápido
@@ -32,14 +32,23 @@ Encuentra escalas a partir de notas, acordes o audio. Practica las escalas en el
 
 - **Por notas.** Toca las notas de una melodía. Cambia entre **Diapasón** y **Teclas de piano** para elegir cómo introducir notas y ver escalas. Cada nota elegida se resalta en todas las octavas. Tócala otra vez para quitarla. Las sugerencias indican qué notas puedes añadir.
 - **Progresiones a partir de notas.** En el modo **Por notas**, selecciona una o varias notas y cambia a **Progresiones** en los resultados. La aplicación sugiere progresiones en tonalidades mayores y menores naturales. Cada nota elegida aparece en al menos un acorde de cada progresión y se muestra debajo de los acordes que la contienen.
-- **Por acordes.** Introduce acordes como `Dm7 | G7 | Cmaj7`. Puedes separarlos con espacios, rayas, barras verticales o saltos de línea. Si no hay coincidencia exacta, aparecen las escalas más cercanas y los acordes que quedan fuera de ellas. Toca **Buscar escalas** y abre **Progresiones** en los resultados para ver cómo seguir. Por ejemplo, `Dm7 – G7` puede continuar con `C`.
-- **Por audio.** Toca **Grabar** y después **Detener y analizar**. También puedes abrir un archivo MP3, WAV o M4A con AAC desde **Elegir archivo**. Desde otra aplicación, usa **Compartir → Mama Gamma**. Se analizan los primeros 20 segundos y se muestran hasta tres tonalidades mayores o menores probables. Abre **Progresiones** después del análisis para ver ideas de acompañamiento en esas tonalidades.
+- **Por acordes.** Introduce acordes como `Dm7 | G7 | Cmaj7`. Puedes separarlos con espacios, rayas, barras verticales o saltos de línea. Si no hay coincidencia exacta, aparecen las escalas más cercanas y los acordes que quedan fuera de ellas. Toca **Buscar escalas** y abre **Progresiones** en los resultados para ver cómo seguir. Por ejemplo, `Dm7 – G7` puede continuar con `C`. Toca un acorde para escucharlo y ver sus notas. **Tocar progresión** reproduce la secuencia y resalta el acorde que está sonando.
+- **Por audio.** Toca **Grabar** y sigue la onda y el temporizador en directo durante una grabación de hasta dos minutos. Toca **Detener y analizar** y luego **Guardar WAV** para conservarla. También puedes abrir un archivo MP3, WAV o M4A con AAC desde **Elegir archivo** o enviarlo desde otra aplicación con **Compartir → Mama Gamma**.
+- **Elegir un fragmento.** El análisis inicial abarca hasta 20 segundos desde el principio. Arrastra la selección sobre la onda, mueve uno de sus bordes o escribe el inicio y el fin. Acerca o aleja la vista con **+** y **−**. Selecciona hasta 20 segundos y toca **Analizar fragmento**. La forma de onda de archivos largos aparece a medida que se decodifica el audio.
+- **Resultados de audio.** La aplicación muestra hasta tres tonalidades probables y una secuencia de notas dominantes detectadas con sus tiempos. Funciona mejor con una sola voz o instrumento. Abre **Progresiones** para ver ideas de acompañamiento o toca **Borrar** para limpiar la búsqueda actual.
 
 <p align="center">
   <img src="../media/es/notes.webp" width="255" alt="Búsqueda por notas en el diapasón">
   <img src="../media/es/progressions.webp" width="255" alt="Continuaciones de acordes sugeridas después de C, G, Am y F">
   <img src="../media/es/audio.webp" width="255" alt="Resultado del análisis de un archivo M4A">
 </p>
+
+## Herramientas
+
+Cambia entre el buscador de escalas y **Herramientas** en la barra inferior. Los resultados se conservan al cambiar de vista.
+
+- **Biblioteca de acordes.** Busca un símbolo o elige la fundamental y el tipo de acorde. Selecciona una nota de bajo para obtener una inversión. Consulta y escucha las digitaciones disponibles para guitarra, bajo, ukelele, mandolina y piano. Las posiciones en instrumentos de cuerda siguen la afinación elegida y sus notas empiezan ligeramente escalonadas.
+- **Afinador.** Toca **Activar micrófono**. Usa el modo cromático o selecciona una cuerda del instrumento actual. El afinador muestra la nota detectada, la frecuencia y la desviación en cents.
 
 ## Diapasón y ajustes
 
@@ -52,6 +61,8 @@ Con **Teclas de piano**, la vista a pantalla completa resalta las notas de la es
 <p align="center">
   <img src="../media/es/piano.webp" width="760" alt="Do mayor en las teclas de piano en horizontal">
 </p>
+
+**Tocar** reproduce la escala hasta la tónica siguiente y resalta cada nota que suena. En Ajustes puedes elegir un tempo de 50 a 180 BPM, la octava inicial y un rango de una a cinco octavas. Desliza el teclado o toca un rango de octavas para desplazarte.
 
 - **Instrumento y afinación.** Elige guitarra, bajo, ukelele o mandolina. Ajusta las cuerdas al aire y selecciona entre 12 y 36 trastes.
 - **Sonido y tema.** Regula el volumen de las notas, siléncialas o selecciona un tema claro, oscuro o del sistema. **Escuchar nota** reproduce el siguiente grado de la escala actual.
@@ -68,7 +79,7 @@ Con **Teclas de piano**, la vista a pantalla completa resalta las notas de la es
 
 ### Instalar el APK
 
-Descarga `Mama-Gamma-1.12.0.apk` en tu dispositivo Android con el enlace de arriba. Si has compilado la aplicación, copia `app-debug.apk` al dispositivo. Abre el archivo, toca **Instalar** e inicia Mama Gamma. Si Android solicita permiso, autoriza la instalación desde la aplicación con la que abriste el APK.
+Descarga `Mama-Gamma-1.13.0.apk` en tu dispositivo Android con el enlace de arriba. Si has compilado la aplicación, copia `app-debug.apk` al dispositivo. Abre el archivo, toca **Instalar** e inicia Mama Gamma. Si Android solicita permiso, autoriza la instalación desde la aplicación con la que abriste el APK.
 
 ### Compilar el APK desde el código fuente
 

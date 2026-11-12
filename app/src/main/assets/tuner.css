@@ -1,0 +1,62 @@
+.tuner-dialog .settings-content { gap: 12px; }
+
+.tuner-targets > p {
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.tuner-strings { display: flex; flex-wrap: wrap; gap: 5px; }
+.tuner-strings .secondary-button { min-height: 40px; padding-inline: 8px; }
+.tuner-strings button[aria-pressed="true"] {
+    border-color: var(--accent-border);
+    background: var(--accent-fill);
+    color: var(--accent-ink);
+}
+
+.tuner-meter {
+    --tuner-offset: 50%;
+    --tuner-needle: #ffdf96;
+    padding: 12px 17px;
+    border: 1px solid var(--board-edge);
+    border-radius: 13px;
+    background: var(--board);
+    color: var(--board-text);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.tuner-reading { display: grid; justify-items: center; gap: 4px; margin-bottom: 13px; }
+#tuner-note { font-size: 38px; line-height: 1; }
+.tuner-values { display: flex; justify-content: center; gap: 10px; min-height: 18px; color: var(--board-muted); font-size: 13px; }
+.tuner-track {
+    position: relative;
+    height: 6px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--board-string) 0%, var(--board-grid) 36%, #94e4cf 50%, var(--board-grid) 64%, var(--board-string) 100%);
+}
+
+.tuner-needle {
+    position: absolute;
+    top: 50%;
+    left: var(--tuner-offset);
+    width: 8px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    background: var(--tuner-needle);
+    box-shadow: 0 0 0 2px var(--board);
+    transition: left 85ms linear;
+}
+.tuner-meter[data-state="center"] { --tuner-needle: #94e4cf; }
+.tuner-meter[data-state="center"] #tuner-note { color: var(--tuner-needle); }
+.tuner-meter[data-state="idle"] .tuner-needle { visibility: hidden; }
+.tuner-ticks { display: flex; justify-content: space-between; margin-top: 9px; color: var(--board-muted); font-size: 11px; }
+.tuner-status { min-height: 1.4em; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.tuner-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.tuner-controls > span { color: var(--muted); font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tuner-needle { transition: none; }
+}
