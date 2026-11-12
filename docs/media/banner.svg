@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title">
+  <title id="title">Mama Gamma</title>
+  <defs>
+    <linearGradient id="background" x2="100%" y2="100%">
+      <stop stop-color="#2B1E42"/>
+      <stop offset=".59" stop-color="#21162F"/>
+      <stop offset="1" stop-color="#39245A"/>
+    </linearGradient>
+    <linearGradient id="pattern-fade" x2="100%" y2="0%">
+      <stop stop-color="white" stop-opacity="0"/>
+      <stop offset=".48" stop-color="white" stop-opacity=".16"/>
+      <stop offset="1" stop-color="white" stop-opacity=".46"/>
+    </linearGradient>
+    <mask id="pattern-mask">
+      <rect x="740" width="460" height="300" fill="url(#pattern-fade)"/>
+    </mask>
+    <clipPath id="frame">
+      <rect width="1200" height="300" rx="34"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1200" height="300" fill="url(#background)"/>
+    <g mask="url(#pattern-mask)">
+      <g transform="rotate(-13 1000 150)">
+        <rect x="740" y="47" width="560" height="206" rx="15" fill="#513871"/>
+        <g fill="none" stroke="#BAA0E9" stroke-width="2">
+          <path d="M740 64H1300M740 98H1300M740 132H1300M740 166H1300M740 200H1300M740 234H1300"/>
+          <path d="M843 47V253M960 47V253M1056 47V253M1134 47V253M1197 47V253" opacity=".7"/>
+        </g>
+        <g fill="#DCC8FF">
+          <circle cx="911" cy="166" r="9"/>
+          <circle cx="1094" cy="98" r="9"/>
+          <circle cx="1165" cy="132" r="9"/>
+        </g>
+        <circle cx="1011" cy="132" r="11" fill="#FFD38A"/>
+      </g>
+    </g>
+  </g>
+  <rect x="1" y="1" width="1198" height="298" rx="33" fill="none" stroke="#DCC8FF" stroke-opacity=".2" stroke-width="2"/>
+
+  <g transform="translate(109 74) scale(1.1875)">
+    <rect width="128" height="128" rx="29" fill="#271D38" stroke="#624A81"/>
+    <path d="M64 18C86 18 108 29 107 48C106 68 87 94 73 107Q64 116 55 107C41 94 22 68 21 48C20 29 42 18 64 18Z"
+      fill="#DECEFF"/>
+    <path d="M42 69V43Q42 40 45 43L64 62L83 43Q86 40 86 43V69"
+      fill="none" stroke="#271D38" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 75Q54 71 57 75M71 75Q74 71 77 75M59 82Q64 87 69 82"
+      fill="none" stroke="#271D38" stroke-width="3.1" stroke-linecap="round"/>
+  </g>
+  <text x="303" y="182" fill="#F9F1FF" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700" letter-spacing="-3.4">Mama <tspan fill="#DECEFF">Gamma</tspan></text>
+</svg>
