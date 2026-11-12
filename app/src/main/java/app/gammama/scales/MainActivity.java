@@ -198,6 +198,11 @@ public final class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public String systemLanguageTags() {
+            return getResources().getConfiguration().getLocales().toLanguageTags();
+        }
+
+        @JavascriptInterface
         public String themeMode() {
             return getPreferences(MODE_PRIVATE).getString(THEME, "system");
         }
@@ -335,6 +340,9 @@ public final class MainActivity extends Activity {
             case "/index.html": return "text/html";
             case "/styles.css": return "text/css";
             case "/brand.svg": return "image/svg+xml";
+            case "/locale-ui.js":
+            case "/locale-search.js":
+            case "/i18n.js":
             case "/scales.js":
             case "/chords.js":
             case "/settings.js":

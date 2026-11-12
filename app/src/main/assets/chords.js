@@ -86,7 +86,7 @@ const ChordFinder = (() => {
             const tonal = (family === "major" || family === "minor" ? 6 : family === "harmonic-minor" ? 4 : 0)
                 + (first === scale.root ? 3 : 0) + (last === scale.root ? 3 : 0) + (cadence ? 5 : 0)
                 + (chords.some(chord => chord.root === dominant && chord.dominant) ? 2 : 0);
-            return Object.assign({}, scale, { outside, missing, tonal });
+            return { ...scale, get name() { return scale.name; }, outside, missing, tonal };
         });
         scales.sort((a, b) => a.outside.length - b.outside.length || a.missing - b.missing || b.tonal - a.tonal || a.order - b.order);
         const best = scales[0];

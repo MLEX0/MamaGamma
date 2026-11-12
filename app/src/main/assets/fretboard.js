@@ -25,16 +25,17 @@ function createFretboard(section, togglePitch) {
         const { from = 0, to = fretCount } = bounds;
         firstFret = from;
         if (rangeView) frets.style.setProperty("--fret-columns", Math.min(13, to - from + 1));
-        const string = instrument.courses ? "пара струн" : "струна";
-        title.textContent = instrument.title;
+        const instrumentTitle = t(instrument.title || instrument.name);
+        const stringLabels = tuning.map((_, index) => t(instrument.courses ? "stringPairNumber" : "stringNumber", { number: index + 1 }));
+        title.textContent = instrumentTitle;
         tuningLabel.textContent = tuning.slice().reverse().map(pitch => pitchNames[pitch]).join(" · ");
-        grid.setAttribute("aria-label", `${instrument.title}, лады от ${from} до ${to}`);
+        grid.setAttribute("aria-label", t("fretboardRange", { instrument: instrumentTitle, from, to }));
         grid.classList.toggle("paired-strings", Boolean(instrument.courses));
 
         notes.length = 0;
         strings.textContent = "";
         frets.textContent = "";
-        strings.appendChild(element("span", "string-heading", instrument.courses ? "Пар." : "Стр."));
+        strings.appendChild(element("span", "string-heading", t(instrument.courses ? "stringPairShort" : "stringShort")));
         tuning.forEach((openPitch, index) => {
             const label = element("span", "string-label", pitchNames[openPitch]);
             label.dataset.string = index + 1;
@@ -42,6 +43,7 @@ function createFretboard(section, togglePitch) {
         });
 
         for (let fret = from; fret <= to; fret += 1) {
+            const positionLabel = fret ? t("fretNumber", { number: fret }) : t("openNote");
             const column = element("div", fret === 0 ? "fret open-fret" : "fret");
             const heading = element("span", "fret-number", fret);
             heading.setAttribute("aria-hidden", "true");
@@ -53,7 +55,7 @@ function createFretboard(section, togglePitch) {
             tuning.forEach((openPitch, index) => {
                 const pitch = pitchAt(openPitch, fret);
                 const cell = element("button", "note");
-                const label = `${pitchNames[pitch]}, ${string} ${index + 1}, ${fret ? `лад ${fret}` : "открытая"}`;
+                const label = `${pitchNames[pitch]}, ${stringLabels[index]}, ${positionLabel}`;
                 cell.type = "button";
                 cell.addEventListener("click", () => {
                     NoteAudio.play(midi[index] + fret);
@@ -83,10 +85,10 @@ function createFretboard(section, togglePitch) {
                 state = "root";
             } else if (pitches.includes(pitch)) {
                 state = "scale";
-                description = ", в гамме";
+                description = t("noteInScale");
             } else if (supported.has(pitch)) {
                 state = "hint";
-                description = ", подходит к другой гамме";
+                description = t("noteInOtherScale");
             }
             cell.dataset.state = state;
             cell.classList.toggle("chosen-root", Boolean(chosen && root));
@@ -97,7 +99,8 @@ function createFretboard(section, togglePitch) {
                 cell.disabled = !visible || !FretSettings.soundEnabled();
                 cell.setAttribute("aria-hidden", String(!visible));
             }
-            cell.setAttribute("aria-label", label + (root ? ", тоника" : description));
+            const hint = root ? t("noteTonic") : description;
+            cell.setAttribute("aria-label", hint ? `${label}, ${hint}` : label);
         });
     }
 

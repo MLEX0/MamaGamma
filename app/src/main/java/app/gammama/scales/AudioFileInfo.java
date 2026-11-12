@@ -30,7 +30,7 @@ final class AudioFileInfo {
 
     static AudioFileInfo read(Context context, Uri uri) {
         ContentResolver resolver = context.getContentResolver();
-        String name = "Аудиофайл";
+        String name = "";
         long size = -1;
         try (Cursor cursor = resolver.query(uri, new String[]{OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE},
                 null, null, null)) {

@@ -64,7 +64,7 @@ final class AudioSearch {
             start(null);
         } else {
             phase = Phase.IDLE;
-            emit("error", "Для записи нужен доступ к микрофону. Можно выбрать аудиофайл.");
+            emit("error", "audioPermissionDenied");
         }
     }
 
@@ -81,7 +81,7 @@ final class AudioSearch {
             activity.startActivityForResult(intent, AUDIO_FILE);
         } catch (ActivityNotFoundException error) {
             phase = Phase.IDLE;
-            emit("error", "На устройстве недоступен выбор аудиофайлов.");
+            emit("error", "audioPickerUnavailable");
         }
     }
 
@@ -99,7 +99,7 @@ final class AudioSearch {
     void analyzeSharedFile(Uri uri) {
         clearTask();
         if (uri == null) {
-            emit("error", "Не удалось открыть переданный аудиофайл.");
+            emit("error", "audioShareUnreadable");
             return;
         }
         start(uri);
@@ -125,10 +125,9 @@ final class AudioSearch {
                     }
                 });
                 List<String> keys = TonalAnalyzer.estimate(clip, current.cancelled::get);
-                finish(current, keys, "В этом фрагменте мало различимых нот. Попробуй запись с несколькими нотами или аккордами.");
+                finish(current, keys, "audioTooFewNotes");
             } catch (IOException | RuntimeException error) {
-                finish(current, Collections.emptyList(), microphone ? "Не удалось записать звук с микрофона."
-                        : "Не удалось прочитать аудио. Попробуй MP3, WAV или M4A с кодеком AAC.");
+                finish(current, Collections.emptyList(), microphone ? "audioMicrophoneError" : "audioReadError");
             }
         });
     }

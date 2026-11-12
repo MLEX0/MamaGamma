@@ -18,9 +18,9 @@ const FretSettings = (() => {
     // Presets are written in physical order, from the last string to the first.
     const instruments = [
         {
-            id: "guitar", name: "Гитара", title: "Гитарный гриф",
+            id: "guitar", name: "guitarName", title: "guitarFretboard",
             tunings: [
-                preset("standard", "Стандартный", "E2 A2 D3 G3 B3 E4"),
+                preset("standard", "standardTuning", "E2 A2 D3 G3 B3 E4"),
                 preset("drop-d", "Drop D", "D2 A2 D3 G3 B3 E4"),
                 preset("d-standard", "D Standard", "D2 G2 C3 F3 A3 D4"),
                 preset("open-g", "Open G", "D2 G2 D3 G3 B3 D4"),
@@ -29,27 +29,28 @@ const FretSettings = (() => {
             ],
         },
         {
-            id: "bass", name: "Бас-гитара", title: "Бас-гитара",
+            id: "bass", name: "bassName",
             tunings: [
-                preset("standard", "Стандартный", "E1 A1 D2 G2"),
+                preset("standard", "standardTuning", "E1 A1 D2 G2"),
                 preset("drop-d", "Drop D", "D1 A1 D2 G2"),
                 preset("d-standard", "D Standard", "D1 G1 C2 F2"),
             ],
         },
         {
-            id: "ukulele", name: "Укулеле", title: "Укулеле",
+            id: "ukulele", name: "ukuleleName",
             tunings: [
-                preset("standard", "Стандартный", "G4 C4 E4 A4"),
-                preset("baritone", "Баритон", "D3 G3 B3 E4"),
+                preset("standard", "standardTuning", "G4 C4 E4 A4"),
+                preset("baritone", "baritoneTuning", "D3 G3 B3 E4"),
             ],
         },
         {
-            id: "mandolin", name: "Мандолина", title: "Мандолина", courses: true,
-            tunings: [preset("standard", "Стандартный", "G3 D4 A4 E5")],
+            id: "mandolin", name: "mandolinName", courses: true,
+            tunings: [preset("standard", "standardTuning", "G3 D4 A4 E5")],
         },
     ];
 
     const themeOptions = document.getElementById("theme-options");
+    const languagePicker = document.getElementById("language-picker");
     const soundSwitch = document.getElementById("note-sound");
     const volumeSlider = document.getElementById("note-volume");
     const volumeValue = document.getElementById("note-volume-value");
@@ -64,6 +65,7 @@ const FretSettings = (() => {
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
     const appearance = window.GammaMamaAppearance;
     let state = restore();
+    I18n.setMode(state.language);
 
     function restore() {
         let saved;
@@ -94,7 +96,8 @@ const FretSettings = (() => {
             };
         });
         const volume = Number.isInteger(saved.volume) && saved.volume >= 0 && saved.volume <= 100 ? saved.volume : 100;
-        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", sound: saved.sound !== false, volume, setups };
+        const language = I18n.languages.some(item => item.id === saved.language) ? saved.language : "system";
+        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", language, sound: saved.sound !== false, volume, setups };
     }
 
     function persist() {
@@ -142,13 +145,13 @@ const FretSettings = (() => {
 
     function options(select, items) {
         select.textContent = "";
-        items.forEach(({ id, name }) => select.add(new Option(name, id)));
+        items.forEach(({ id, name }) => select.add(new Option(t(name), id)));
     }
 
     function renderStrings() {
         stringTuning.textContent = "";
         const courses = instrument().courses;
-        stringsTitle.textContent = courses ? "Ноты открытых пар струн" : "Ноты открытых струн";
+        stringsTitle.textContent = t(courses ? "openStringPairs" : "openStrings");
         setup().pitches.forEach((pitch, index) => {
             const label = document.createElement("label");
             const number = document.createElement("span");
@@ -157,7 +160,7 @@ const FretSettings = (() => {
             number.setAttribute("aria-hidden", "true");
             select.className = "settings-select";
             select.dataset.stringIndex = index;
-            select.setAttribute("aria-label", `${courses ? "Пара" : "Струна"} ${index + 1}`);
+            select.setAttribute("aria-label", t(courses ? "stringPairNumber" : "stringNumber", { number: index + 1 }));
             pitchNames.forEach((name, value) => select.add(new Option(name, value)));
             select.value = String(pitch);
             label.appendChild(number);
@@ -174,7 +177,7 @@ const FretSettings = (() => {
     }
 
     function renderSetup() {
-        options(tuningPicker, instrument().tunings.concat({ id: "custom", name: "Свой строй" }));
+        options(tuningPicker, instrument().tunings.concat({ id: "custom", name: "customTuning" }));
         tuningPicker.value = profile().tuning;
         renderStrings();
         renderFrets();
@@ -193,23 +196,37 @@ const FretSettings = (() => {
         themeOptions.querySelector(`input[value="${state.theme}"]`).checked = true;
         soundSwitch.checked = state.sound;
         renderVolume();
+        options(languagePicker, [{ id: "system", name: "systemLanguage" }, ...I18n.languages]);
+        languagePicker.value = state.language;
+        options(instrumentPicker, instruments);
         instrumentPicker.value = state.instrument;
         renderSetup();
+        if (appearance?.appVersion) {
+            const version = document.getElementById("app-version");
+            version.textContent = t("versionLabel", { version: appearance.appVersion() });
+            version.hidden = false;
+        }
     }
 
     function reset() {
         state = readSettings({}, "system");
+        const languageChanged = I18n.setMode(state.language);
         renderSettings();
         persist();
+        return languageChanged;
     }
 
-    function init(onSetupChange, onSoundChange, onVolumeChange, onPreview) {
+    function init(onSetupChange, onSoundChange, onVolumeChange, onPreview, onLanguageChange) {
         if (!appearance && systemTheme.addEventListener) systemTheme.addEventListener("change", applyTheme);
-        if (appearance && typeof appearance.appVersion === "function") {
-            const version = document.getElementById("app-version");
-            version.textContent = `Версия ${appearance.appVersion()}`;
-            version.hidden = false;
-        }
+        languagePicker.addEventListener("change", () => {
+            state.language = languagePicker.value;
+            const changed = I18n.setMode(state.language);
+            if (changed) {
+                renderSettings();
+                onLanguageChange();
+            }
+            persist();
+        });
         themeOptions.addEventListener("change", event => {
             state.theme = event.target.value;
             applyTheme();
@@ -233,7 +250,6 @@ const FretSettings = (() => {
         });
         previewButton.addEventListener("click", onPreview);
 
-        options(instrumentPicker, instruments);
         instrumentPicker.addEventListener("change", () => {
             state.instrument = instrumentPicker.value;
             renderSetup();

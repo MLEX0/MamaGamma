@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="mama_gamma_icon_background">#292146</color>
+    <color name="mama_gamma_icon_background">#271D38</color>
     <style name="GammamaBaseTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">#F6F4FA</item>
         <item name="android:statusBarColor">#F6F4FA</item>

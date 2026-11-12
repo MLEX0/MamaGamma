@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
-    <title>Mama Gamma · Поиск гаммы</title>
+    <title data-i18n="documentTitle">Mama Gamma · Поиск гаммы</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="locale-ui.js" defer></script>
+    <script src="locale-search.js" defer></script>
+    <script src="i18n.js" defer></script>
     <script src="scales.js" defer></script>
     <script src="chords.js" defer></script>
     <script src="settings.js" defer></script>
@@ -19,11 +22,11 @@
         <div class="topbar-inner">
             <div class="brand"><img class="brand-icon" src="brand.svg" alt="">Mama Gamma</div>
             <div class="topbar-actions">
-                <button id="settings-open" class="settings-open" type="button" aria-haspopup="dialog" aria-label="Настройки">
-                    <span class="settings-icon" aria-hidden="true"><i></i><i></i></span><span class="settings-label">Настройки</span>
+                <button id="settings-open" class="settings-open" type="button" aria-haspopup="dialog" aria-label="Настройки" data-i18n-aria-label="settings">
+                    <span class="settings-icon" aria-hidden="true"><i></i><i></i></span><span class="settings-label" data-i18n="settings">Настройки</span>
                 </button>
                 <button id="history-open" class="history-open" type="button" aria-haspopup="dialog">
-                    <span class="history-icon" aria-hidden="true"></span><span class="history-label">История</span>
+                    <span class="history-icon" aria-hidden="true"></span><span class="history-label" data-i18n="history">История</span>
                 </button>
             </div>
         </div>
@@ -31,50 +34,50 @@
 
     <main class="finder" id="finder">
         <div class="intro">
-            <h1>Поиск гаммы</h1>
-            <div class="search-modes" role="group" aria-label="Способ поиска">
-                <button type="button" id="mode-notes" aria-pressed="true">По нотам</button>
-                <button type="button" id="mode-chords" aria-pressed="false">По аккордам</button>
-                <button type="button" id="mode-audio" aria-pressed="false">По аудио</button>
+            <h1 data-i18n="findScale">Поиск гаммы</h1>
+            <div class="search-modes" role="group" aria-label="Способ поиска" data-i18n-aria-label="searchMethod">
+                <button type="button" id="mode-notes" aria-pressed="true" data-i18n="byNotes">По нотам</button>
+                <button type="button" id="mode-chords" aria-pressed="false" data-i18n="byChords">По аккордам</button>
+                <button type="button" id="mode-audio" aria-pressed="false" data-i18n="byAudio">По аудио</button>
             </div>
         </div>
 
         <div class="workspace" id="workspace" data-mode="notes">
             <form id="chord-search" class="chord-search" hidden>
                 <div class="chord-heading">
-                    <label for="chord-input">Аккорды песни</label>
-                    <button id="reset-chords" class="text-button" type="button" aria-label="Сбросить аккорды" disabled>Сбросить</button>
+                    <label for="chord-input" data-i18n="songChords">Аккорды песни</label>
+                    <button id="reset-chords" class="text-button" type="button" aria-label="Сбросить аккорды" data-i18n-aria-label="clearChords" data-i18n="clearSelection" disabled>Сбросить</button>
                 </div>
                 <textarea id="chord-input" rows="2" maxlength="2000" autocomplete="off" autocapitalize="off"
                           spellcheck="false" placeholder="Am – F – C – G" aria-describedby="chord-error"></textarea>
                 <p id="chord-error" class="chord-error" role="alert" hidden></p>
-                <button class="primary-button" type="submit">Найти гаммы</button>
+                <button class="primary-button" type="submit" data-i18n="findScales">Найти гаммы</button>
             </form>
 
             <section id="audio-search" class="chord-search audio-search" aria-labelledby="audio-title" hidden>
-                <h2 id="audio-title">Тональность по аудио</h2>
-                <p class="audio-help">Запиши фрагмент или выбери MP3, WAV или M4A. Анализируются первые 20 секунд.</p>
+                <h2 id="audio-title" data-i18n="audioKey">Тональность по аудио</h2>
+                <p class="audio-help" data-i18n="audioHelp">Запиши фрагмент или выбери MP3, WAV или M4A. Анализируются первые 20 секунд.</p>
                 <div class="audio-actions">
-                    <button id="audio-record" type="button" class="primary-button">Записать</button>
-                    <button id="audio-file" type="button" class="secondary-button">Выбрать файл</button>
+                    <button id="audio-record" type="button" class="primary-button" data-i18n="recordAudio">Записать</button>
+                    <button id="audio-file" type="button" class="secondary-button" data-i18n="chooseAudioFile">Выбрать файл</button>
                 </div>
                 <div id="audio-file-info" class="audio-file-info" hidden>
-                    <span class="audio-file-label">Выбранный файл</span>
+                    <span class="audio-file-label" data-i18n="selectedFile">Выбранный файл</span>
                     <p id="audio-file-name" class="audio-file-name"></p>
                     <dl id="audio-file-details" class="audio-file-details"></dl>
                 </div>
                 <p id="audio-status" class="audio-status" role="status" hidden></p>
-                <button id="audio-cancel" type="button" class="text-button audio-cancel" hidden>Отмена</button>
+                <button id="audio-cancel" type="button" class="text-button audio-cancel" data-i18n="cancel" hidden>Отмена</button>
             </section>
 
             <div class="instrument-panel" id="instrument-panel">
                 <div class="scale-control">
                     <div class="scale-field">
-                        <label for="scale-picker">Гамма на грифе</label>
+                        <label for="scale-picker" data-i18n="fretboardScale">Гамма на грифе</label>
                         <select id="scale-picker"></select>
                         <span class="chevron" aria-hidden="true"></span>
                     </div>
-                    <button type="button" class="open-scale" id="scale-open" aria-label="Открыть гамму на весь экран" aria-controls="scale-view">
+                    <button type="button" class="open-scale" id="scale-open" aria-label="Открыть гамму на весь экран" data-i18n-aria-label="openFullScale" aria-controls="scale-view">
                         <span class="expand-icon" aria-hidden="true"></span>
                     </button>
                 </div>
@@ -82,26 +85,26 @@
                 <section class="board" id="main-board" aria-labelledby="board-title">
                     <div class="board-header">
                         <div class="board-instrument">
-                            <h2 id="board-title">Гитарный гриф</h2>
+                            <h2 id="board-title" data-i18n="guitarFretboard">Гитарный гриф</h2>
                             <span id="board-tuning" class="tuning"></span>
                         </div>
-                        <div class="fret-navigation" role="group" aria-label="Прокрутка грифа">
-                            <button id="fret-prev" type="button" aria-label="К первым ладам" class="arrow previous"><span></span></button>
+                        <div class="fret-navigation" role="group" aria-label="Прокрутка грифа" data-i18n-aria-label="fretNavigation">
+                            <button id="fret-prev" type="button" aria-label="К первым ладам" data-i18n-aria-label="firstFrets" class="arrow previous"><span></span></button>
                             <span id="fret-range" class="fret-range"></span>
-                            <button id="fret-next" type="button" aria-label="К следующим ладам" class="arrow"><span></span></button>
+                            <button id="fret-next" type="button" aria-label="К следующим ладам" data-i18n-aria-label="nextFrets" class="arrow"><span></span></button>
                         </div>
                     </div>
-                    <div class="fretboard" id="fretboard" role="group" aria-label="Гриф">
+                    <div class="fretboard" id="fretboard" role="group" aria-label="Гриф" data-i18n-aria-label="fretboard">
                         <div class="strings" id="strings" aria-hidden="true"></div>
                         <div class="fret-scroll" id="fret-scroll">
                             <div class="frets" id="frets"></div>
                         </div>
                     </div>
-                    <ul class="legend" aria-label="Обозначения">
-                        <li id="chosen-legend"><span class="legend-dot chosen-dot"></span>Выбрано</li>
-                        <li><span class="legend-dot root-dot"></span>Тоника</li>
-                        <li><span class="legend-dot scale-dot"></span>В гамме</li>
-                        <li id="hint-legend" hidden><span class="legend-dot hint-dot"></span>Подходит</li>
+                    <ul class="legend" aria-label="Обозначения" data-i18n-aria-label="legend">
+                        <li id="chosen-legend"><span class="legend-dot chosen-dot"></span><span data-i18n="legendSelected">Выбрано</span></li>
+                        <li><span class="legend-dot root-dot"></span><span data-i18n="legendTonic">Тоника</span></li>
+                        <li><span class="legend-dot scale-dot"></span><span data-i18n="legendInScale">В гамме</span></li>
+                        <li id="hint-legend" hidden><span class="legend-dot hint-dot"></span><span data-i18n="legendSuggested">Подходит</span></li>
                     </ul>
                 </section>
             </div>
@@ -109,15 +112,15 @@
             <div class="match-panel" id="match-panel">
                 <section class="selection" id="note-search" aria-labelledby="selection-title">
                     <div class="section-heading">
-                        <h2 id="selection-title">Выбранные ноты</h2>
-                        <button class="text-button" id="reset" type="button" disabled>Сбросить</button>
+                        <h2 id="selection-title" data-i18n="selectedNotes">Выбранные ноты</h2>
+                        <button class="text-button" id="reset" type="button" data-i18n="clearSelection" disabled>Сбросить</button>
                     </div>
                     <div class="selected-notes" id="selected-notes"></div>
                 </section>
 
                 <section class="matches" id="match-section" aria-labelledby="matches-title">
                     <div class="section-heading">
-                        <h2 id="matches-title">Подходящие гаммы</h2>
+                        <h2 id="matches-title" data-i18n="fittingScales">Подходящие гаммы</h2>
                         <span class="match-count" id="match-count" aria-live="polite"></span>
                     </div>
                     <p id="match-status" class="match-status" role="status" hidden></p>
@@ -130,14 +133,14 @@
 
     <main id="scale-view" class="scale-view" aria-labelledby="detail-title" hidden>
         <header class="scale-view-header">
-            <button type="button" id="detail-close" class="detail-back" aria-label="Вернуться к поиску">
+            <button type="button" id="detail-close" class="detail-back" aria-label="Вернуться к поиску" data-i18n-aria-label="backToSearch">
                 <span class="back-icon" aria-hidden="true"></span>
             </button>
             <div class="detail-heading">
                 <h1 id="detail-title"></h1>
                 <p id="detail-pitches" class="detail-pitches"></p>
             </div>
-            <button id="detail-hide-controls" class="secondary-button" type="button">Только гриф</button>
+            <button id="detail-hide-controls" class="secondary-button" type="button" data-i18n="fretboardOnly">Только гриф</button>
         </header>
         <div class="detail-content">
             <section class="board detail-board" id="detail-board" aria-labelledby="detail-board-title" data-fret-range>
@@ -146,26 +149,26 @@
                         <h2 id="detail-board-title"></h2>
                         <span class="tuning"></span>
                     </div>
-                    <div class="detail-fret-limits" role="group" aria-label="Диапазон ладов">
-                        <label for="detail-fret-from">Лады с</label>
-                        <select id="detail-fret-from" aria-label="Начальный лад"></select>
-                        <label for="detail-fret-to">по</label>
-                        <select id="detail-fret-to" aria-label="Конечный лад"></select>
+                    <div class="detail-fret-limits" role="group" aria-label="Диапазон ладов" data-i18n-aria-label="fretRange">
+                        <label for="detail-fret-from" data-i18n="fretsFrom">Лады с</label>
+                        <select id="detail-fret-from" aria-label="Начальный лад" data-i18n-aria-label="startFret"></select>
+                        <label for="detail-fret-to" data-i18n="fretsTo">по</label>
+                        <select id="detail-fret-to" aria-label="Конечный лад" data-i18n-aria-label="endFret"></select>
                     </div>
-                    <div class="fret-navigation" role="group" aria-label="Прокрутка грифа гаммы">
-                        <button type="button" aria-label="К предыдущим ладам" class="arrow previous"><span></span></button>
+                    <div class="fret-navigation" role="group" aria-label="Прокрутка грифа гаммы" data-i18n-aria-label="scaleFretNavigation">
+                        <button type="button" aria-label="К предыдущим ладам" data-i18n-aria-label="previousFrets" class="arrow previous"><span></span></button>
                         <span class="fret-range"></span>
-                        <button type="button" aria-label="К следующим ладам" class="arrow"><span></span></button>
+                        <button type="button" aria-label="К следующим ладам" data-i18n-aria-label="nextFrets" class="arrow"><span></span></button>
                     </div>
                 </div>
-                <div class="fretboard" role="group" aria-label="Гриф гаммы">
+                <div class="fretboard" role="group" aria-label="Гриф гаммы" data-i18n-aria-label="scaleFretboard">
                     <div class="strings" aria-hidden="true"></div>
-                    <button id="detail-show-controls" class="detail-show-controls" type="button" aria-label="Показать элементы управления" hidden></button>
+                    <button id="detail-show-controls" class="detail-show-controls" type="button" aria-label="Показать элементы управления" data-i18n-aria-label="showFretControls" hidden></button>
                     <div class="fret-scroll"><div class="frets"></div></div>
                 </div>
-                <ul class="legend" aria-label="Обозначения">
-                    <li><span class="legend-dot root-dot"></span>Тоника</li>
-                    <li><span class="legend-dot scale-dot"></span>В гамме</li>
+                <ul class="legend" aria-label="Обозначения" data-i18n-aria-label="legend">
+                    <li><span class="legend-dot root-dot"></span><span data-i18n="legendTonic">Тоника</span></li>
+                    <li><span class="legend-dot scale-dot"></span><span data-i18n="legendInScale">В гамме</span></li>
                 </ul>
             </section>
         </div>
@@ -173,73 +176,80 @@
 
     <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
         <div class="settings-header">
-            <h2 id="settings-title">Настройки</h2>
-            <button id="settings-close" class="dialog-close" type="button" data-close-dialog aria-label="Закрыть настройки">×</button>
+            <h2 id="settings-title" data-i18n="settings">Настройки</h2>
+            <button id="settings-close" class="dialog-close" type="button" data-close-dialog aria-label="Закрыть настройки" data-i18n-aria-label="closeSettings">×</button>
         </div>
         <div class="settings-content">
             <fieldset class="settings-field">
-                <legend>Тема</legend>
+                <legend data-i18n="theme">Тема</legend>
                 <div class="theme-options" id="theme-options">
-                    <label><input type="radio" name="theme" value="system"><span>Системная</span></label>
-                    <label><input type="radio" name="theme" value="light"><span>Светлая</span></label>
-                    <label><input type="radio" name="theme" value="dark"><span>Тёмная</span></label>
+                    <label><input type="radio" name="theme" value="system"><span data-i18n="systemTheme">Системная</span></label>
+                    <label><input type="radio" name="theme" value="light"><span data-i18n="lightTheme">Светлая</span></label>
+                    <label><input type="radio" name="theme" value="dark"><span data-i18n="darkTheme">Тёмная</span></label>
                 </div>
             </fieldset>
 
+            <div class="settings-field">
+                <label for="language-picker" data-i18n="language">Язык</label>
+                <select id="language-picker" class="settings-select">
+                    <option value="system" data-i18n="systemLanguage">Язык системы</option>
+                </select>
+            </div>
+
             <label class="sound-setting" for="note-sound">
-                <span>Звук нот</span>
+                <span data-i18n="noteSound">Звук нот</span>
                 <input type="checkbox" id="note-sound" role="switch">
             </label>
 
             <div class="settings-field volume-setting">
-                <label for="note-volume">Громкость нот</label>
+                <label for="note-volume" data-i18n="noteVolume">Громкость нот</label>
                 <output id="note-volume-value" for="note-volume" aria-hidden="true"></output>
                 <input type="range" id="note-volume" min="0" max="100" step="1">
-                <button id="note-preview" class="secondary-button" type="button">Послушать ноту</button>
+                <button id="note-preview" class="secondary-button" type="button" data-i18n="playNotePreview">Послушать ноту</button>
             </div>
 
             <div class="settings-field">
-                <label for="instrument-picker">Инструмент</label>
+                <label for="instrument-picker" data-i18n="instrument">Инструмент</label>
                 <select id="instrument-picker" class="settings-select"></select>
             </div>
 
             <div class="settings-field">
-                <label for="tuning-picker">Строй</label>
+                <label for="tuning-picker" data-i18n="tuning">Строй</label>
                 <select id="tuning-picker" class="settings-select"></select>
             </div>
 
             <fieldset class="settings-field">
-                <legend id="strings-title">Ноты открытых струн</legend>
+                <legend id="strings-title" data-i18n="openStrings">Ноты открытых струн</legend>
                 <div id="string-tuning" class="string-tuning"></div>
             </fieldset>
 
             <div class="settings-field fret-length-field">
-                <label for="fret-length">Количество ладов</label>
+                <label for="fret-length" data-i18n="fretCount">Количество ладов</label>
                 <div class="fret-stepper">
-                    <button id="length-less" type="button" aria-label="Уменьшить количество ладов">−</button>
+                    <button id="length-less" type="button" aria-label="Уменьшить количество ладов" data-i18n-aria-label="decreaseFrets">−</button>
                     <input id="fret-length" type="number" inputmode="numeric" enterkeyhint="done" step="1">
-                    <button id="length-more" type="button" aria-label="Увеличить количество ладов">+</button>
+                    <button id="length-more" type="button" aria-label="Увеличить количество ладов" data-i18n-aria-label="increaseFrets">+</button>
                 </div>
             </div>
             <div class="settings-about">
-                <button id="settings-reset" class="secondary-button danger-button" type="button">Сбросить настройки</button>
+                <button id="settings-reset" class="secondary-button danger-button" type="button" data-i18n="resetSettings">Сбросить настройки</button>
                 <p id="app-version" hidden></p>
             </div>
         </div>
-        <div class="settings-footer"><button id="settings-done" type="button" data-close-dialog>Готово</button></div>
+        <div class="settings-footer"><button id="settings-done" type="button" data-close-dialog data-i18n="done">Готово</button></div>
     </dialog>
 
     <dialog id="history-dialog" class="settings-dialog history-dialog" aria-labelledby="history-title">
         <div class="settings-header">
-            <h2 id="history-title">История поиска</h2>
-            <button class="dialog-close" type="button" data-close-dialog aria-label="Закрыть историю">×</button>
+            <h2 id="history-title" data-i18n="searchHistory">История поиска</h2>
+            <button class="dialog-close" type="button" data-close-dialog aria-label="Закрыть историю" data-i18n-aria-label="closeHistory">×</button>
         </div>
         <div class="settings-content">
-            <p id="history-empty" class="history-empty">Здесь появятся результаты поиска по нотам, аккордам и аудио.</p>
+            <p id="history-empty" class="history-empty" data-i18n="emptyHistory">Здесь появятся результаты поиска по нотам, аккордам и аудио.</p>
             <ol id="history-list" class="history-list" hidden></ol>
         </div>
         <div class="history-footer">
-            <button id="history-clear" class="secondary-button danger-button" type="button" disabled>Очистить историю</button>
+            <button id="history-clear" class="secondary-button danger-button" type="button" data-i18n="clearHistory" disabled>Очистить историю</button>
         </div>
     </dialog>
 
@@ -247,7 +257,7 @@
         <div class="settings-header"><h2 id="confirm-title"></h2></div>
         <p id="confirm-message"></p>
         <div class="confirm-actions">
-            <button class="secondary-button" type="button" data-close-dialog autofocus>Отмена</button>
+            <button class="secondary-button" type="button" data-close-dialog data-i18n="cancel" autofocus>Отмена</button>
             <button id="confirm-action" class="secondary-button danger-button" type="button"></button>
         </div>
     </dialog>

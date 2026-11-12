@@ -20,7 +20,12 @@ const audioFileInfo = byId("audio-file-info");
 const audioFileName = byId("audio-file-name");
 const audioFileDetails = byId("audio-file-details");
 const audioBridge = window.MamaGammaAudio;
-const audioSizeFormat = new Intl.NumberFormat("ru", { maximumFractionDigits: 1 });
+const audioStatusKeys = {
+    requesting: "microphoneRequest",
+    choosing: "audioFileChoosing",
+    recording: "audioRecording",
+    analyzing: "audioAnalyzing",
+};
 const chordForm = byId("chord-search");
 const chordInput = byId("chord-input");
 const chordError = byId("chord-error");
@@ -48,16 +53,15 @@ const historyDialog = byId("history-dialog");
 const historyOpen = byId("history-open");
 const historyClear = byId("history-clear");
 const confirmDialog = byId("confirm-dialog");
-const historyDate = new Intl.DateTimeFormat("ru", {
-    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-});
 const mainBoard = createFretboard(byId("main-board"), togglePitch);
 const detailBoard = createFretboard(byId("detail-board"));
 
 const session = restore();
 const scaleCatalog = new Map(match([]).map(scale => [scale.id, scale]));
 let audioPhase = "idle";
+let audioMessage = "";
 let audioSource = "file";
+let chordValidation = null;
 let notesHistoryTimer = null;
 let chordMatches = session.chordAnalyzed ? ChordFinder.match(ChordFinder.parse(session.chordText).chords) : [];
 let matches = [];
@@ -99,7 +103,7 @@ function isAudioKey(id) {
 }
 
 function readAudioFile(value) {
-    if (!value || typeof value.name !== "string" || !value.name) return null;
+    if (!value || typeof value.name !== "string") return null;
     return {
         name: value.name.slice(0, 512),
         format: typeof value.format === "string" ? value.format.slice(0, 16) : "",
@@ -118,29 +122,30 @@ function audioDuration(ms) {
 }
 
 function audioSize(bytes) {
-    if (bytes < 1000) return `${bytes} Б`;
-    if (bytes < 1000000) return `${audioSizeFormat.format(bytes / 1000)} КБ`;
-    if (bytes < 1000000000) return `${audioSizeFormat.format(bytes / 1000000)} МБ`;
-    return `${audioSizeFormat.format(bytes / 1000000000)} ГБ`;
+    const format = new Intl.NumberFormat(I18n.language(), { maximumFractionDigits: 1 });
+    if (bytes < 1000) return t("sizeBytes", { size: format.format(bytes) });
+    if (bytes < 1000000) return t("sizeKilobytes", { size: format.format(bytes / 1000) });
+    if (bytes < 1000000000) return t("sizeMegabytes", { size: format.format(bytes / 1000000) });
+    return t("sizeGigabytes", { size: format.format(bytes / 1000000000) });
 }
 
 function renderAudioFile() {
     const file = session.audioFile;
     audioFileInfo.hidden = !file;
-    audioFileName.textContent = file ? file.name : "";
+    audioFileName.textContent = file ? file.name || t("historyAudioFile") : "";
     audioFileDetails.textContent = "";
     if (!file) return;
 
     const format = Array.from(new Set([file.format, file.codec].filter(Boolean))).join(" · ");
     const details = [
-        ["Формат", format],
-        ["Длительность", file.durationMs >= 0 ? audioDuration(file.durationMs) : ""],
-        ["Размер", file.size >= 0 ? audioSize(file.size) : ""],
+        ["fileFormat", format],
+        ["fileDuration", file.durationMs >= 0 ? audioDuration(file.durationMs) : ""],
+        ["fileSize", file.size >= 0 ? audioSize(file.size) : ""],
     ];
     details.forEach(([label, value]) => {
         if (!value) return;
         const entry = element("div");
-        entry.appendChild(element("dt", "", label));
+        entry.appendChild(element("dt", "", t(label)));
         entry.appendChild(element("dd", "", value));
         audioFileDetails.appendChild(entry);
     });
@@ -174,10 +179,10 @@ function dismissDialog() {
 }
 
 function confirmAction(title, message, label, action) {
-    byId("confirm-title").textContent = title;
-    byId("confirm-message").textContent = message;
+    byId("confirm-title").textContent = t(title);
+    byId("confirm-message").textContent = t(message);
     const button = byId("confirm-action");
-    button.textContent = label;
+    button.textContent = t(label);
     button.onclick = () => {
         confirmDialog.close();
         action();
@@ -187,6 +192,9 @@ function confirmAction(title, message, label, action) {
 
 function renderHistory() {
     const entries = SearchHistory.list();
+    const historyDate = new Intl.DateTimeFormat(I18n.language(), {
+        year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    });
     const list = byId("history-list");
     list.textContent = "";
     list.hidden = !entries.length;
@@ -273,9 +281,9 @@ function renderPicker() {
     picker.disabled = !activeScale;
     scaleOpen.disabled = !activeScale;
     if (picker.disabled) {
-        const label = session.mode === "audio" ? "Запиши или выбери аудио"
-            : session.mode === "chords" ? "Введи аккорды для поиска" : "Нет подходящих гамм";
-        picker.appendChild(new Option(label));
+        const label = session.mode === "audio" ? "chooseAudioHint"
+            : session.mode === "chords" ? "enterChordsHint" : "noFittingScales";
+        picker.appendChild(new Option(t(label)));
         return;
     }
     matches.forEach(scale => picker.appendChild(new Option(scale.name, scale.id)));
@@ -379,13 +387,13 @@ function renderSelection() {
     selection.textContent = "";
     reset.disabled = session.selected.length === 0;
     if (reset.disabled) {
-        selection.appendChild(element("p", "selection-placeholder", "Выбери первую ноту на грифе."));
+        selection.appendChild(element("p", "selection-placeholder", t("firstNoteHint")));
         return;
     }
     session.selected.forEach(pitch => {
         const chip = element("button", "selected-chip", pitchNames[pitch]);
         chip.type = "button";
-        chip.setAttribute("aria-label", `Убрать ноту ${pitchNames[pitch]}`);
+        chip.setAttribute("aria-label", t("removeNote", { note: pitchNames[pitch] }));
         const remove = element("span", "", "×");
         remove.setAttribute("aria-hidden", "true");
         chip.appendChild(remove);
@@ -395,19 +403,20 @@ function renderSelection() {
 }
 
 function renderResults() {
+    byId("matches-title").textContent = t(session.mode === "audio" ? "probableKeys" : "fittingScales");
     matchSection.hidden = session.mode !== "notes" && !matches.length;
     const approximate = session.mode === "chords" && matches.length && matches[0].outside.length;
     matchStatus.hidden = !approximate;
-    matchStatus.textContent = approximate ? "Полного совпадения нет. Показаны ближайшие гаммы." : "";
+    matchStatus.textContent = approximate ? t("closestScales") : "";
     counter.textContent = matches.length;
-    counter.setAttribute("aria-label", `Найдено гамм — ${matches.length}`);
+    counter.setAttribute("aria-label", t("scalesFound", { count: matches.length }));
     results.textContent = "";
     more.hidden = matches.length <= previewLimit;
-    more.textContent = showAll ? "Свернуть список" : `Показать все (${matches.length})`;
+    more.textContent = showAll ? t("collapseScales") : t("showAllScales", { count: matches.length });
     more.setAttribute("aria-expanded", String(showAll));
 
     if (!matches.length) {
-        results.appendChild(element("p", "empty", "Для этого набора нот гамм не найдено. Убери одну из выбранных нот."));
+        results.appendChild(element("p", "empty", t("noScalesForNotes")));
         return;
     }
 
@@ -416,7 +425,7 @@ function renderResults() {
         const row = element("div", "result-row");
         const expand = element("button", "open-scale");
         expand.type = "button";
-        expand.setAttribute("aria-label", `Открыть на весь экран — ${scale.name}`);
+        expand.setAttribute("aria-label", t("openScaleFullScreen", { name: scale.name }));
         expand.setAttribute("aria-controls", "scale-view");
         const icon = element("span", "expand-icon");
         icon.setAttribute("aria-hidden", "true");
@@ -442,8 +451,9 @@ function renderResults() {
         text.appendChild(element("span", "result-pitches", pitchesOf(scale)));
         if (scale.outside && scale.outside.length) {
             const outside = Array.from(new Set(scale.outside));
-            const summary = outside.slice(0, 4).join(", ") + (outside.length > 4 ? ` и ещё ${outside.length - 4}` : "");
-            text.appendChild(element("span", "outside-chords", `Вне гаммы — ${summary}`));
+            const rest = outside.length > 4 ? ` ${t("additionalChords", { count: outside.length - 4 })}` : "";
+            const summary = outside.slice(0, 4).join(", ") + rest;
+            text.appendChild(element("span", "outside-chords", t("chordsOutsideScale", { chords: summary })));
         }
         button.appendChild(text);
         const check = element("span", "result-check", "✓");
@@ -475,7 +485,6 @@ function changeMode(mode) {
     audioMode.setAttribute("aria-pressed", String(mode === "audio"));
     chordForm.hidden = mode !== "chords";
     audioPanel.hidden = mode !== "audio";
-    byId("matches-title").textContent = mode === "audio" ? "Вероятные тональности" : "Подходящие гаммы";
     byId("note-search").hidden = !notes;
     byId("chosen-legend").hidden = !notes;
     workspace.insertBefore(instrumentPanel, notes ? matchPanel : null);
@@ -506,8 +515,22 @@ function cancelAudioSearch() {
     return true;
 }
 
+function renderAudioControls() {
+    const recording = audioPhase === "recording";
+    const busy = audioBusy();
+    audioRecord.textContent = t(recording ? "stopAndAnalyze" : "recordAudio");
+    audioRecord.disabled = !audioBridge || (busy && !recording);
+    audioFile.disabled = !audioBridge || busy;
+    audioCancel.hidden = !recording && audioPhase !== "analyzing";
+    const status = audioMessage || audioStatusKeys[audioPhase];
+    audioStatus.textContent = status ? t(status) : "";
+    audioStatus.hidden = !audioStatus.textContent;
+    audioStatus.classList.toggle("chord-error", audioPhase === "error");
+}
+
 function updateAudioSearch(phase, keys, message, file) {
     audioPhase = phase;
+    audioMessage = message;
     if (phase === "recording" && session.mode !== "audio") {
         cancelAudioSearch();
         return;
@@ -515,20 +538,7 @@ function updateAudioSearch(phase, keys, message, file) {
     const recording = phase === "recording";
     if (recording) audioSource = "microphone";
     if (phase === "choosing") audioSource = "file";
-    const busy = audioBusy();
-    audioRecord.textContent = recording ? "Стоп и анализ" : "Записать";
-    audioRecord.disabled = !audioBridge || (busy && !recording);
-    audioFile.disabled = !audioBridge || busy;
-    audioCancel.hidden = !recording && phase !== "analyzing";
-    const status = {
-        requesting: "Ожидание доступа к микрофону…",
-        choosing: "Выбор аудиофайла…",
-        recording: "Идёт запись, до 20 секунд…",
-        analyzing: "Ищем тональность…",
-    };
-    audioStatus.textContent = message || status[phase] || "";
-    audioStatus.hidden = !audioStatus.textContent;
-    audioStatus.classList.toggle("chord-error", phase === "error");
+    renderAudioControls();
 
     if (recording || phase === "analyzing") {
         session.audioFile = readAudioFile(file);
@@ -545,10 +555,16 @@ function updateAudioSearch(phase, keys, message, file) {
     }
 }
 
-function showChordError(message) {
+function renderChordError() {
+    const message = chordValidation ? t(chordValidation.key, chordValidation.params) : "";
     chordError.textContent = message;
     chordError.hidden = !message;
     chordInput.setAttribute("aria-invalid", String(Boolean(message)));
+}
+
+function showChordError(key, params) {
+    chordValidation = key ? { key, params } : null;
+    renderChordError();
 }
 
 chordInput.value = session.chordText;
@@ -557,7 +573,7 @@ resetChords.disabled = !chordInput.value;
 function updateChordInput() {
     session.chordText = chordInput.value;
     resetChords.disabled = !chordInput.value;
-    showChordError("");
+    showChordError();
     if (session.chordAnalyzed) {
         session.chordAnalyzed = false;
         session.chordScale = null;
@@ -579,17 +595,17 @@ chordForm.addEventListener("submit", event => {
     const { chords, invalid } = ChordFinder.parse(session.chordText);
     if (invalid.length) {
         const sample = invalid.slice(0, 4).join(", ") + (invalid.length > 4 ? "…" : "");
-        showChordError(`Проверь обозначения аккордов — ${sample}`);
+        showChordError("invalidChords", { chords: sample });
         chordInput.focus();
         return;
     }
     if (!chords.length) {
-        showChordError("Введи хотя бы один аккорд, например Am или G7.");
+        showChordError("missingChords");
         chordInput.focus();
         return;
     }
     chordInput.blur();
-    showChordError("");
+    showChordError();
     session.chordAnalyzed = true;
     chordMatches = ChordFinder.match(chords);
     updateMatches();
@@ -609,7 +625,7 @@ audioRecord.addEventListener("click", () => {
 });
 audioFile.addEventListener("click", () => { if (audioBridge) audioBridge.pickFile(); });
 audioCancel.addEventListener("click", cancelAudioSearch);
-if (!audioBridge) updateAudioSearch("error", [], "Анализ аудио доступен в Android-приложении.");
+if (!audioBridge) updateAudioSearch("error", [], "audioAndroidOnly");
 picker.addEventListener("change", () => setPreview(picker.value));
 scaleOpen.addEventListener("click", () => openDetail(activeScale, scaleOpen));
 detailBack.addEventListener("click", closeScaleView);
@@ -643,6 +659,23 @@ function refreshSetup(resetScroll) {
     renderBoard();
 }
 
+function refreshLanguage(resetScroll = false) {
+    refreshSetup(resetScroll);
+    renderPicker();
+    renderSelection();
+    renderResults();
+    renderChordError();
+    renderAudioControls();
+    renderAudioFile();
+    if (historyDialog.open) renderHistory();
+    if (!scaleView.hidden) {
+        const leadingFret = detailBoard.leadingFret();
+        byId("detail-title").textContent = detailScale.name;
+        renderDetailFrets(Number(detailFrom.value), Number(detailTo.value));
+        detailBoard.scrollToFret(leadingFret);
+    }
+}
+
 function previewVolume() {
     if (!FretSettings.soundEnabled() || FretSettings.noteVolume() === 0) return;
     const scale = activeScale || scaleCatalog.get("0-major");
@@ -669,15 +702,16 @@ for (const dialog of document.querySelectorAll("dialog")) {
 }
 byId("settings-open").addEventListener("click", () => showDialog(settingsDialog));
 byId("settings-reset").addEventListener("click", () => {
-    confirmAction("Сбросить настройки?", "Тема, звук, инструменты и диапазон ладов вернутся к исходным значениям.", "Сбросить", () => {
-        FretSettings.reset();
+    confirmAction("resetSettingsTitle", "resetSettingsDescription", "resetSettingsAction", () => {
+        const languageChanged = FretSettings.reset();
         NoteAudio.stop();
         NoteAudio.updateVolume();
         session.detailFrom = 0;
         session.detailTo = null;
         detailScrollFret = null;
         persist();
-        refreshSetup(true);
+        if (languageChanged) refreshLanguage(true);
+        else refreshSetup(true);
     });
 });
 historyOpen.addEventListener("click", () => {
@@ -686,7 +720,7 @@ historyOpen.addEventListener("click", () => {
     showDialog(historyDialog);
 });
 historyClear.addEventListener("click", () => {
-    confirmAction("Очистить историю?", "Все сохранённые результаты поиска будут удалены.", "Очистить", () => {
+    confirmAction("clearHistoryTitle", "clearHistoryDescription", "clearHistoryAction", () => {
         clearTimeout(notesHistoryTimer);
         notesHistoryTimer = null;
         SearchHistory.clear();
@@ -698,7 +732,8 @@ historyClear.addEventListener("click", () => {
 FretSettings.init(refreshSetup, enabled => {
     if (!enabled) NoteAudio.stop();
     renderBoard();
-}, NoteAudio.updateVolume, previewVolume);
+}, NoteAudio.updateVolume, previewVolume, refreshLanguage);
+renderAudioControls();
 renderAudioFile();
 changeMode(session.mode);
 if (audioBridge) audioBridge.ready();

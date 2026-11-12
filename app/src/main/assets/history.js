@@ -4,11 +4,11 @@ const SearchHistory = (() => {
     const storageKey = "gammama-history-v1";
     const limit = 100;
     const sources = new Map([
-        ["notes", "По нотам"],
-        ["chords", "По аккордам"],
-        ["microphone", "Микрофон"],
-        ["file", "Аудиофайл"],
-        ["shared", "Из другого приложения"],
+        ["notes", "byNotes"],
+        ["chords", "byChords"],
+        ["microphone", "historyMicrophone"],
+        ["file", "historyAudioFile"],
+        ["shared", "historyShared"],
     ]);
     const entries = restore();
 
@@ -48,5 +48,5 @@ const SearchHistory = (() => {
         persist();
     }
 
-    return { add, clear, list: () => entries.slice(), sourceName: source => sources.get(source) };
+    return { add, clear, list: () => entries.slice(), sourceName: source => t(sources.get(source)) };
 })();
