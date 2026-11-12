@@ -90,6 +90,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
+.starting body { visibility: hidden; }
 html.modal-open { overflow: hidden; overscroll-behavior: none; }
 body, h1, h2, h3, p, ul { margin: 0; }
 button, select, textarea { font: inherit; color: inherit; }
@@ -185,17 +186,17 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .finder { padding: 16px 0 32px; }
 .intro { margin-bottom: 13px; }
 h1 { font-size: 30px; line-height: 1.12; letter-spacing: -1.15px; font-weight: 800; }
-.search-modes {
+.search-modes, .result-views {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 3px;
     padding: 3px;
-    margin-top: 10px;
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--wash);
 }
-.search-modes button {
+.search-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
+.result-views { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 8px; }
+.search-modes button, .result-views button {
     min-height: 36px;
     padding: 0 8px;
     border: 1px solid transparent;
@@ -205,7 +206,7 @@ h1 { font-size: 30px; line-height: 1.12; letter-spacing: -1.15px; font-weight: 8
     font-size: 13px;
     font-weight: 750;
 }
-.search-modes button[aria-pressed="true"] { background: var(--surface); border-color: var(--accent-border); color: var(--accent-text); }
+.search-modes button[aria-pressed="true"], .result-views button[aria-pressed="true"] { background: var(--surface); border-color: var(--accent-border); color: var(--accent-text); }
 .workspace { display: grid; gap: 12px; }
 .instrument-panel, .match-panel, .chord-search { min-width: 0; }
 .chord-search {
@@ -234,6 +235,7 @@ h1 { font-size: 30px; line-height: 1.12; letter-spacing: -1.15px; font-weight: 8
 .chord-error, .match-status, .outside-chords { color: var(--warning); }
 .chord-error, .match-status { font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
 .match-status { margin: 0 0 8px; }
+.match-status.progression-context { color: var(--muted); }
 .primary-button {
     min-height: 40px;
     padding: 0 10px;
@@ -563,6 +565,36 @@ h2 { font-size: 17px; line-height: 1.2; letter-spacing: -.22px; font-weight: 750
     font-variant-numeric: tabular-nums;
 }
 .results { display: grid; gap: 6px; }
+.progression-card { padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.progression-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin-bottom: 7px; }
+.progression-key { font-size: 14px; line-height: 1.25; }
+.progression-key-hint { color: var(--muted); font-size: 11px; }
+.progression-chords { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.progression-chord {
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    gap: 3px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 3px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--wash);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+.progression-degree { color: var(--muted); font-size: 11px; font-weight: 650; }
+.progression-chord-name { font-size: 14px; line-height: 1.2; }
+.progression-notes {
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: var(--chosen);
+    color: var(--chosen-ink);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.25;
+}
 .result-row {
     display: flex;
     align-items: center;

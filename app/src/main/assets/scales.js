@@ -1,7 +1,7 @@
 "use strict";
 
 const ScaleFinder = (() => {
-    const pitchNames = NoteNames.names("international");
+    const pitchNames = NoteNames.names("international", false);
     const families = [
         ["major", "scaleMajor", [0, 2, 4, 5, 7, 9, 11]],
         ["minor", "scaleMinor", [0, 2, 3, 5, 7, 8, 10]],

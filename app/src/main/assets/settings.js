@@ -52,6 +52,7 @@ const FretSettings = (() => {
     const themeOptions = document.getElementById("theme-options");
     const languagePicker = document.getElementById("language-picker");
     const noteSystemPicker = document.getElementById("note-system-picker");
+    const sharpsOnlySwitch = document.getElementById("sharps-only");
     const soundSwitch = document.getElementById("note-sound");
     const volumeSlider = document.getElementById("note-volume");
     const volumeValue = document.getElementById("note-volume-value");
@@ -63,11 +64,12 @@ const FretSettings = (() => {
     const fretLength = document.getElementById("fret-length");
     const less = document.getElementById("length-less");
     const more = document.getElementById("length-more");
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+    const systemTheme = AppTheme.system;
     const appearance = window.GammaMamaAppearance;
     let state = restore();
     I18n.setMode(state.language);
     NoteNames.setMode(state.noteSystem);
+    NoteNames.setSharpsOnly(state.sharpsOnly);
 
     function restore() {
         let saved;
@@ -100,7 +102,8 @@ const FretSettings = (() => {
         const volume = Number.isInteger(saved.volume) && saved.volume >= 0 && saved.volume <= 100 ? saved.volume : 100;
         const language = I18n.languages.some(item => item.id === saved.language) ? saved.language : "system";
         const noteSystem = NoteNames.systems.some(item => item.id === saved.noteSystem) ? saved.noteSystem : "international";
-        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", language, noteSystem, sound: saved.sound !== false, volume, setups };
+        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", language, noteSystem,
+            sharpsOnly: saved.sharpsOnly === true, sound: saved.sound !== false, volume, setups };
     }
 
     function persist() {
@@ -140,9 +143,7 @@ const FretSettings = (() => {
     }
 
     function applyTheme() {
-        const systemDark = appearance ? appearance.systemDark() : systemTheme.matches;
-        const dark = state.theme === "dark" || (state.theme === "system" && systemDark);
-        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        AppTheme.apply(state.theme);
         if (appearance) appearance.setThemeMode(state.theme);
     }
 
@@ -203,6 +204,7 @@ const FretSettings = (() => {
         languagePicker.value = state.language;
         options(noteSystemPicker, NoteNames.systems.map(({ id, label }) => ({ id, name: label })));
         noteSystemPicker.value = state.noteSystem;
+        sharpsOnlySwitch.checked = state.sharpsOnly;
         options(instrumentPicker, instruments);
         instrumentPicker.value = state.instrument;
         renderSetup();
@@ -217,6 +219,7 @@ const FretSettings = (() => {
         state = readSettings({}, "system");
         I18n.setMode(state.language);
         NoteNames.setMode(state.noteSystem);
+        NoteNames.setSharpsOnly(state.sharpsOnly);
         renderSettings();
         persist();
     }
@@ -238,6 +241,13 @@ const FretSettings = (() => {
                 renderStrings();
                 onNotationChange();
             }
+            persist();
+        });
+        sharpsOnlySwitch.addEventListener("change", () => {
+            state.sharpsOnly = sharpsOnlySwitch.checked;
+            NoteNames.setSharpsOnly(state.sharpsOnly);
+            renderStrings();
+            onNotationChange();
             persist();
         });
         themeOptions.addEventListener("change", event => {

@@ -1,20 +1,24 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="starting">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
     <title data-i18n="documentTitle">Mama Gamma · Поиск гаммы</title>
+    <script src="startup.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="piano.css">
     <script src="locale-ui.js" defer></script>
     <script src="locale-search.js" defer></script>
     <script src="i18n.js" defer></script>
     <script src="notation.js" defer></script>
     <script src="scales.js" defer></script>
+    <script src="progressions.js" defer></script>
     <script src="chords.js" defer></script>
     <script src="settings.js" defer></script>
     <script src="note-audio.js" defer></script>
     <script src="fretboard.js" defer></script>
+    <script src="piano.js" defer></script>
     <script src="history.js" defer></script>
     <script src="app.js" defer></script>
 </head>
@@ -72,9 +76,13 @@
             </section>
 
             <div class="instrument-panel" id="instrument-panel">
+                <div class="result-views" role="group" aria-label="Вид нот" data-i18n-aria-label="instrumentView">
+                    <button type="button" id="show-fretboard" aria-pressed="true" aria-controls="main-board" data-i18n="fretboardView">Гриф</button>
+                    <button type="button" id="show-piano" aria-pressed="false" aria-controls="main-piano" data-i18n="pianoView">Клавиши</button>
+                </div>
                 <div class="scale-control">
                     <div class="scale-field">
-                        <label for="scale-picker" data-i18n="fretboardScale">Гамма на грифе</label>
+                        <label for="scale-picker" id="scale-picker-label" data-i18n="fretboardScale">Гамма на грифе</label>
                         <select id="scale-picker"></select>
                         <span class="chevron" aria-hidden="true"></span>
                     </div>
@@ -108,6 +116,7 @@
                         <li id="hint-legend" hidden><span class="legend-dot hint-dot"></span><span data-i18n="legendSuggested">Подходит</span></li>
                     </ul>
                 </section>
+                <section class="piano-board" id="main-piano" aria-label="Клавиши" data-i18n-aria-label="pianoView" hidden></section>
             </div>
 
             <div class="match-panel" id="match-panel">
@@ -120,6 +129,10 @@
                 </section>
 
                 <section class="matches" id="match-section" aria-labelledby="matches-title">
+                    <div class="result-views" id="result-views" role="group" aria-label="Тип результатов" data-i18n-aria-label="resultViews">
+                        <button type="button" id="show-scale-results" aria-pressed="true" aria-controls="results" data-i18n="scaleResults">Гаммы</button>
+                        <button type="button" id="show-progression-results" aria-pressed="false" aria-controls="results" data-i18n="progressionResults">Прогрессии</button>
+                    </div>
                     <div class="section-heading">
                         <h2 id="matches-title" data-i18n="fittingScales">Подходящие гаммы</h2>
                         <span class="match-count" id="match-count" aria-live="polite"></span>
@@ -172,6 +185,7 @@
                     <li><span class="legend-dot scale-dot"></span><span data-i18n="legendInScale">В гамме</span></li>
                 </ul>
             </section>
+            <section class="piano-board detail-piano" id="detail-piano" aria-label="Клавиши" data-i18n-aria-label="pianoView" hidden></section>
         </div>
     </main>
 
@@ -201,6 +215,11 @@
                 <label for="note-system-picker" data-i18n="notationLabel">Названия нот</label>
                 <select id="note-system-picker" class="settings-select"></select>
             </div>
+
+            <label class="sound-setting" for="sharps-only">
+                <span data-i18n="sharpsOnly">Только диезы</span>
+                <input type="checkbox" id="sharps-only" role="switch">
+            </label>
 
             <label class="sound-setting" for="note-sound">
                 <span data-i18n="noteSound">Звук нот</span>

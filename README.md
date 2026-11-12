@@ -3,11 +3,16 @@
 </p>
 
 <p align="center">
-  Find the key from notes, chords, or audio and open the scale on a fretboard.
+  Find the key from notes, chords, or audio and play the scale on a fretboard or piano keys.
 </p>
 
 <p align="center">
-  <strong>Version 1.9.0</strong> · Android 8.0 and later · Works offline
+  <strong>Version 1.11.0</strong> · Android 8.0 and later · Works offline
+</p>
+
+<p align="center">
+  <strong><a href="https://github.com/MLEX0/MamaGamma/releases/download/v1.11.0/Mama-Gamma-1.11.0.apk">Download APK</a></strong> ·
+  <a href="https://github.com/MLEX0/MamaGamma/releases/tag/v1.11.0">Release notes</a>
 </p>
 
 <p align="center">
@@ -17,7 +22,8 @@
   <a href="docs/readme/README.es.md">Español</a> ·
   <a href="docs/readme/README.fr.md">Français</a> ·
   <a href="docs/readme/README.uk.md">Українська</a> ·
-  <a href="docs/readme/README.ja.md">日本語</a>
+  <a href="docs/readme/README.ja.md">日本語</a> ·
+  <a href="docs/readme/README.zh.md">简体中文</a>
 </p>
 
 <p align="center">
@@ -33,13 +39,13 @@
 2. Tap **Find scales**. Select **C major** in the results to highlight its notes on the fretboard.
 3. Tap the expand button next to a result or double-tap its name. The fretboard opens in landscape.
 
-> The example uses the default International note names. To match the English labels in this guide, open **Settings → Language → English**. The screenshots show the Russian interface.
+> The example uses the default International note names. To match the English labels in this guide, open **Settings → Language → English**.
 
 <details>
 <summary>Watch a chord search</summary>
 
 <p align="center">
-  <img src="docs/media/chords.gif" width="300" alt="Entering C, G, Am and F, finding scales, and opening the search history">
+  <img src="docs/media/en/chords.gif" width="300" alt="Entering C, G, Am and F, finding scales and chord continuations, and opening search history">
 </p>
 
 </details>
@@ -54,18 +60,24 @@
 
 ### By notes
 
-Tap notes on the fretboard, such as **C**, **E**, and **G**. Each selection applies across octaves. Tap a note or its chip again to remove it.
+Tap notes such as **C**, **E**, and **G**. Switch between **Fretboard** and **Piano keys** to choose how you enter notes and view scales. Each selection applies across octaves. Tap a note or its chip again to remove it.
 
-| Fretboard legend | Meaning |
+| Legend | Meaning |
 | --- | --- |
 | **Selected** | The note is part of the search |
 | **Tonic** | The first degree of the displayed scale |
 | **In scale** | The note belongs to the displayed scale |
 | **Suggested** | Adding the note would still match another candidate scale |
 
+### Chord progressions from notes
+
+In **By notes**, select one or more notes on the fretboard or piano keys, then switch the results to **Progressions**. The app suggests chord progressions in major and natural minor keys. Every selected note appears in at least one chord of each result and is listed below the chords it belongs to.
+
 ### By chords
 
-Paste a progression, such as `Dm7 | G7 | Cmaj7`, and tap **Find scales**. You can separate chords with spaces, dashes, vertical bars, or line breaks. If the progression has no exact match, the app lists the closest scales and identifies the chords outside each one. Use **Clear** to empty the input and results.
+Paste a progression, such as `Dm7 | G7 | Cmaj7`, and tap **Find scales**. You can separate chords with spaces, dashes, vertical bars, or line breaks. If the progression has no exact match, the app lists the closest scales and identifies the chords outside each one. Use **Clear chords** to empty the input and results.
+
+Open **Progressions** in the results to see what could come next. For example, `C` can follow `Dm7 – G7`.
 
 ### By audio
 
@@ -77,9 +89,12 @@ Paste a progression, such as `Dm7 | G7 | Cmaj7`, and tap **Find scales**. You ca
 
 The app analyzes up to 20 seconds on your device and shows available file details. If it returns several keys, open each scale and compare it with what you hear. For a quiet or short clip, try a passage with several clear notes or chords.
 
+Once analysis finishes, open **Progressions** for harmony ideas in the estimated keys.
+
 <p align="center">
-  <img src="docs/media/notes.webp" width="255" alt="The notes C, E and G selected on the guitar fretboard">
-  <img src="docs/media/audio.webp" width="255" alt="An M4A analysis result with its detected key and file details">
+  <img src="docs/media/en/notes.webp" width="255" alt="The notes C, E and G selected on the guitar fretboard">
+  <img src="docs/media/en/progressions.webp" width="255" alt="Suggested chord continuations after C, G, Am and F">
+  <img src="docs/media/en/audio.webp" width="255" alt="An M4A analysis result with its detected key and file details">
 </p>
 
 ## Fretboard and settings
@@ -87,20 +102,26 @@ The app analyzes up to 20 seconds on your device and shows available file detail
 ### Practice a scale
 
 1. Tap a result once to preview its notes, or open it full screen with the expand button or a double-tap.
-2. Set the first and last fret, for example **5–12**. Swipe to move along the fretboard or use the arrows to move one fret at a time.
+2. In **Fretboard** mode, set the first and last fret, for example **5–12**. Swipe or use the arrows to move along the fretboard.
 3. Tap **Fretboard only** for a larger playing area. The **⋯** button in the top-left corner or Android **Back** brings back the controls.
 
-Tap a highlighted note to hear its pitch for that string, tuning, and fret.
+Tap a highlighted note to hear its pitch. The fretboard follows the selected instrument and tuning.
 
 <p align="center">
-  <img src="docs/media/fretboard.webp" width="760" alt="Scale notes across frets 5 through 12 in Fretboard only mode">
+  <img src="docs/media/en/fretboard.webp" width="760" alt="C major on the full-screen guitar fretboard with frets 5 through 12 selected">
+</p>
+
+In **Piano keys** mode, the full-screen view highlights the scale across the keyboard.
+
+<p align="center">
+  <img src="docs/media/en/piano.webp" width="760" alt="C major on the piano keys in landscape">
 </p>
 
 ### Change language and note names
 
-**Settings → Language** follows Android by default and falls back to English if none of the system's languages are supported. Choose English, Russian, German, Spanish, French, Ukrainian, or Japanese to override it.
+**Settings → Language** follows Android by default and falls back to English if none of the system's languages are supported. Choose English, Russian, German, Spanish, French, Ukrainian, Japanese, or Simplified Chinese to override it.
 
-**Settings → Note names** controls the notation separately. It applies to the fretboard, scale names, open-string tuning, and chord input.
+**Settings → Note names** controls the notation separately. It applies to the fretboard, piano keys, scale names, open-string tuning, and chord input. Turn on **Sharps only** to spell note names and chord roots with sharps, such as D♯ in place of E♭.
 
 | Note names | Natural notes, starting at C |
 | --- | --- |
@@ -124,15 +145,15 @@ With Solfège selected, the quick-start progression reads `Do – Sol – Lam �
 Tap **History** in the top bar to see the last 100 successful searches on your device. Each entry shows the time, search method, and up to three scales. Consecutive identical note or chord searches create one entry. Tap a scale to open it on the fretboard, or use **Clear history** to delete the entries.
 
 <p align="center">
-  <img src="docs/media/settings.webp" width="255" alt="Mama Gamma settings with language, theme, sound and instrument controls">
-  <img src="docs/media/history.webp" width="255" alt="Search history with entries from audio, chords, and notes">
+  <img src="docs/media/en/settings.webp" width="255" alt="Mama Gamma settings with language, theme, sound and instrument controls">
+  <img src="docs/media/en/history.webp" width="255" alt="Search history with entries from audio, chords, and notes">
 </p>
 
 ## Install
 
-### Install an APK you already have
+### Install an APK
 
-1. Copy `Mama Gamma.apk` or the built `app-debug.apk` to your Android device.
+1. Download `Mama-Gamma-1.11.0.apk` above on your Android device. If you built the app, copy `app-debug.apk` to the device.
 2. Open the file. If Android prompts you, allow installs from the app you used to open it. [Android installation help](https://support.google.com/pixelphone/answer/7391672)
 3. Tap **Install**, then open **Mama Gamma**.
 
@@ -142,8 +163,8 @@ Tap **History** in the top bar to see the last 100 successful searches on your d
 2. Clone the repository and enter its directory.
 
    ```sh
-   git clone https://github.com/MLEX0/GammaMama.git
-   cd GammaMama
+   git clone https://github.com/MLEX0/MamaGamma.git
+   cd MamaGamma
    ```
 
 3. Open the project in Android Studio to set up the SDK path. When building from a terminal, you can set `ANDROID_HOME` to your installed SDK directory.

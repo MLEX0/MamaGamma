@@ -1,0 +1,122 @@
+.piano-board {
+    --piano-key-min: 38px;
+    --piano-key-height: clamp(146px, 29vw, 194px);
+    min-width: 0;
+    padding: 8px;
+    overflow: hidden;
+    border: 1px solid var(--board-edge);
+    border-radius: 13px;
+    background: var(--board);
+}
+
+.piano-scroll {
+    min-width: 0;
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--board-string) var(--board);
+}
+
+.piano-keys {
+    position: relative;
+    width: 100%;
+    min-width: calc(14 * var(--piano-key-min));
+    height: var(--piano-key-height);
+    border-top: 3px solid var(--board-edge);
+}
+
+.piano-key {
+    position: absolute;
+    top: 0;
+    left: var(--piano-key-position);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 1px 8px;
+    border: 1px solid var(--board-divider);
+    border-top: 0;
+    border-radius: 0 0 5px 5px;
+    font-weight: 750;
+    line-height: 1.15;
+    touch-action: manipulation;
+}
+
+.piano-white {
+    width: calc(100% / 14);
+    height: 100%;
+    background: linear-gradient(#fbf9ff, #eae4f4);
+    color: #382d49;
+    box-shadow: inset 0 -3px 0 #21152c28;
+    font-size: 12px;
+}
+
+.piano-black {
+    z-index: 1;
+    width: calc(62% / 14);
+    height: 62%;
+    transform: translateX(-50%);
+    background: linear-gradient(#373048, #211b30);
+    color: var(--board-text);
+    box-shadow: 0 3px 3px #120d2480, inset 0 -4px 0 #120d2460;
+    font-size: 10px;
+}
+
+.piano-key-name {
+    max-width: 100%;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.piano-octave {
+    font-size: 9px;
+    font-weight: 600;
+    opacity: .72;
+}
+
+.piano-key[data-state="hint"] {
+    background: var(--hint-key);
+    color: var(--hint-text);
+}
+
+.piano-key[data-state="scale"] {
+    background: var(--scale-key);
+    color: var(--scale-ink);
+}
+
+.piano-key[data-state="root"] {
+    border-color: var(--root-ring);
+    background: var(--root-key);
+    color: var(--scale-ink);
+    box-shadow: inset 0 0 0 2px var(--root-ring);
+}
+
+.piano-key[data-state="chosen"] {
+    border-color: var(--chosen-edge);
+    background: var(--chosen);
+    color: var(--chosen-ink);
+}
+
+.piano-key.piano-chosen-root { box-shadow: inset 0 0 0 2px var(--root-ring); }
+.piano-key:not(:disabled):active { filter: brightness(.9); }
+.piano-key:focus-visible { outline-offset: -3px; }
+.piano-black:focus-visible { z-index: 2; }
+.piano-key:disabled[data-state="plain"] .piano-key-name { opacity: .55; }
+
+#detail-piano {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 150px;
+    border: 0;
+    border-radius: 0;
+}
+
+#detail-piano .piano-scroll { display: flex; flex: 1; }
+#detail-piano .piano-keys { flex: 0 0 100%; height: auto; }
+
+@media (orientation: landscape) and (max-height: 500px) {
+    #main-piano { --piano-key-height: clamp(112px, 37vh, 174px); }
+}

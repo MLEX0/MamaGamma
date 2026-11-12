@@ -7,6 +7,12 @@ const byId = id => document.getElementById(id);
 
 const workspace = byId("workspace");
 const instrumentPanel = byId("instrument-panel");
+const fretboardView = byId("show-fretboard");
+const pianoView = byId("show-piano");
+const mainFretboardSection = byId("main-board");
+const mainPianoSection = byId("main-piano");
+const detailFretboardSection = byId("detail-board");
+const detailPianoSection = byId("detail-piano");
 const matchPanel = byId("match-panel");
 const noteMode = byId("mode-notes");
 const chordMode = byId("mode-chords");
@@ -36,6 +42,8 @@ const scaleOpen = byId("scale-open");
 const selection = byId("selected-notes");
 const reset = byId("reset");
 const matchSection = byId("match-section");
+const scaleResults = byId("show-scale-results");
+const progressionResults = byId("show-progression-results");
 const matchStatus = byId("match-status");
 const results = byId("results");
 const more = byId("more");
@@ -54,8 +62,10 @@ const historyDialog = byId("history-dialog");
 const historyOpen = byId("history-open");
 const historyClear = byId("history-clear");
 const confirmDialog = byId("confirm-dialog");
-const mainBoard = createFretboard(byId("main-board"), togglePitch);
-const detailBoard = createFretboard(byId("detail-board"));
+const mainBoard = createFretboard(mainFretboardSection, togglePitch);
+const detailBoard = createFretboard(detailFretboardSection);
+const mainPiano = createPiano(mainPianoSection, togglePitch);
+const detailPiano = createPiano(detailPianoSection);
 
 const session = restore();
 const scaleCatalog = new Map(match([]).map(scale => [scale.id, scale]));
@@ -64,7 +74,8 @@ let audioMessage = "";
 let audioSource = "file";
 let chordValidation = null;
 let notesHistoryTimer = null;
-let chordMatches = session.chordAnalyzed ? ChordFinder.match(ChordFinder.parse(session.chordText).chords) : [];
+let analyzedChords = session.chordAnalyzed ? ChordFinder.parse(session.chordText).chords : [];
+let chordMatches = ChordFinder.match(analyzedChords);
 let matches = [];
 let activeScale = null;
 let volumePreviewScale = null;
@@ -87,8 +98,16 @@ function restore() {
     const savedChordText = typeof saved.chordText === "string" ? saved.chordText : "";
     const savedNotation = NoteNames.systems.find(system => system.id === saved.chordNotation)?.id || "international";
     const chordNotation = NoteNames.mode();
+    const chordSharps = NoteNames.sharpsOnly();
+    const savedViews = saved.progressionViews || {};
     return {
         selected: Array.from(new Set(pitches.filter(pitch => Number.isInteger(pitch) && pitch >= 0 && pitch < 12))),
+        pianoMode: saved.pianoMode === true,
+        progressionViews: {
+            notes: (savedViews.notes ?? saved.showProgressions) === true,
+            chords: savedViews.chords === true,
+            audio: savedViews.audio === true,
+        },
         pinnedScale: saved.pinnedScale || null,
         chordScale: saved.chordScale || null,
         audioScale: saved.audioScale || null,
@@ -97,8 +116,10 @@ function restore() {
         detailFrom: Number.isInteger(saved.detailFrom) && saved.detailFrom >= 0 ? saved.detailFrom : 0,
         detailTo: Number.isInteger(saved.detailTo) && saved.detailTo >= 0 ? saved.detailTo : null,
         mode: ["notes", "chords", "audio"].includes(saved.mode) ? saved.mode : "notes",
-        chordText: ChordFinder.rewrite(savedChordText, savedNotation, chordNotation),
+        chordText: ChordFinder.rewrite(savedChordText, savedNotation, chordNotation,
+            { force: (saved.chordSharps === true) !== chordSharps }),
         chordNotation,
+        chordSharps,
         chordAnalyzed: saved.chordAnalyzed === true,
     };
 }
@@ -230,7 +251,9 @@ function renderHistory() {
 }
 
 function historyInput(entry) {
-    if (entry.source === "chords") return ChordFinder.rewrite(entry.input, "international", NoteNames.mode());
+    if (entry.source === "chords") {
+        return ChordFinder.rewrite(entry.input, "international", NoteNames.mode(), { force: NoteNames.sharpsOnly() });
+    }
     if (entry.source !== "notes") return entry.input;
     return entry.input.split(" · ").map(name => {
         const pitch = pitchNames.indexOf(name);
@@ -316,7 +339,8 @@ function setPreview(id) {
     picker.value = id;
     persist();
     renderBoard();
-    updateActiveResult();
+    if (isProgressionView()) renderResults();
+    else updateActiveResult();
 }
 
 function renderBoard() {
@@ -325,8 +349,11 @@ function renderBoard() {
     if (selected.length) matches.forEach(scale => scale.pitches.forEach(pitch => supported.add(pitch)));
     const preview = activeScale ? activeScale.pitches : [];
     hintLegend.hidden = !Array.from(supported).some(pitch => !preview.includes(pitch));
-    mainBoard.render(activeScale, selected, supported);
-    mainBoard.updateRange();
+    if (session.pianoMode) mainPiano.render(activeScale, selected, supported);
+    else {
+        mainBoard.render(activeScale, selected, supported);
+        mainBoard.updateRange();
+    }
 }
 
 function renderDetailFrets(from, to) {
@@ -344,19 +371,7 @@ function setDetailFrets(from, to, leadingFret = from) {
     if (leadingFret > from && leadingFret <= to) detailBoard.scrollToFret(leadingFret);
 }
 
-function openDetail(scale, opener) {
-    flushNotesHistory(scale);
-    finderPosition = window.scrollY;
-    detailOpener = opener;
-    detailScale = scale;
-    byId("detail-title").textContent = scale.name;
-    byId("detail-pitches").textContent = pitchesOf(scale);
-    scaleView.classList.remove("board-only");
-    showDetailControls.hidden = true;
-    finder.hidden = true;
-    finderHeader.hidden = true;
-    scaleView.hidden = false;
-    window.scrollTo(0, 0);
+function openDetailFretboard() {
     const lastFret = FretSettings.setup().frets;
     detailFrom.textContent = "";
     detailTo.textContent = "";
@@ -368,6 +383,28 @@ function openDetail(scale, opener) {
     const from = Math.min(session.detailFrom, to);
     renderDetailFrets(from, to);
     if (detailScrollFret > from && detailScrollFret <= to) detailBoard.scrollToFret(detailScrollFret);
+}
+
+function openDetail(scale, opener) {
+    flushNotesHistory(scale);
+    finderPosition = window.scrollY;
+    detailOpener = opener;
+    detailScale = scale;
+    byId("detail-title").textContent = scale.name;
+    byId("detail-pitches").textContent = pitchesOf(scale);
+    scaleView.classList.remove("board-only");
+    showDetailControls.hidden = true;
+    hideDetailControls.hidden = session.pianoMode;
+    detailFretboardSection.hidden = session.pianoMode;
+    detailPianoSection.hidden = !session.pianoMode;
+    finder.hidden = true;
+    finderHeader.hidden = true;
+    scaleView.hidden = false;
+    window.scrollTo(0, 0);
+    if (session.pianoMode) {
+        detailPiano.build(true);
+        detailPiano.render(scale);
+    } else openDetailFretboard();
     detailBack.focus({ preventScroll: true });
     if (window.GammaMamaAppearance) window.GammaMamaAppearance.setScaleFullscreen(true);
 }
@@ -389,13 +426,13 @@ function dismissScaleView() {
 
 function closeScaleView() {
     if (scaleView.hidden) return false;
-    detailScrollFret = detailBoard.leadingFret();
+    if (!session.pianoMode) detailScrollFret = detailBoard.leadingFret();
     if (window.GammaMamaAppearance) window.GammaMamaAppearance.setScaleFullscreen(false);
     scaleView.hidden = true;
     finderHeader.hidden = false;
     finder.hidden = false;
     window.scrollTo(0, finderPosition);
-    mainBoard.updateRange();
+    if (!session.pianoMode) mainBoard.updateRange();
     detailOpener.focus({ preventScroll: true });
     detailOpener = null;
     return true;
@@ -405,7 +442,7 @@ function renderSelection() {
     selection.textContent = "";
     reset.disabled = session.selected.length === 0;
     if (reset.disabled) {
-        selection.appendChild(element("p", "selection-placeholder", t("firstNoteHint")));
+        selection.appendChild(element("p", "selection-placeholder", t(session.pianoMode ? "firstPianoNoteHint" : "firstNoteHint")));
         return;
     }
     session.selected.forEach(pitch => {
@@ -421,18 +458,98 @@ function renderSelection() {
     });
 }
 
+function isProgressionView() {
+    return session.progressionViews[session.mode];
+}
+
+function setResultView(showProgressions) {
+    if (isProgressionView() === showProgressions) return;
+    session.progressionViews[session.mode] = showProgressions;
+    showAll = false;
+    persist();
+    renderResults();
+}
+
+function prepareResultList(title, count, countLabel, moreLabel) {
+    byId("matches-title").textContent = t(title);
+    counter.textContent = count;
+    counter.setAttribute("aria-label", t(countLabel, { count }));
+    results.textContent = "";
+    more.hidden = count <= previewLimit;
+    more.textContent = showAll ? t("collapseScales") : t(moreLabel, { count });
+    more.setAttribute("aria-expanded", String(showAll));
+}
+
+function renderProgressions() {
+    const selected = session.mode === "notes" ? session.selected : [];
+    let title = "matchingProgressions";
+    let empty = session.pianoMode ? "progressionSelectPianoNotes" : "progressionSelectNotes";
+    if (selected.length) empty = "progressionNoMatch";
+    let context = "";
+    let progressions;
+    if (session.mode === "chords") {
+        title = "chordContinuationsTitle";
+        empty = "progressionNoChordContinuation";
+        progressions = ProgressionFinder.continueChords(analyzedChords, session.chordScale);
+        const tail = analyzedChords.slice(-4).map(chord => chord.label);
+        if (analyzedChords.length > tail.length) tail.unshift("…");
+        if (tail.length) context = t("chordContinuationContext", { chords: tail.join(" – ") });
+    } else if (session.mode === "audio") {
+        title = "audioProgressionsTitle";
+        empty = "progressionNoAudioKeys";
+        progressions = ProgressionFinder.forKeys(matches, session.audioScale);
+    } else {
+        progressions = ProgressionFinder.match(selected, session.pinnedScale);
+    }
+    prepareResultList(title, progressions.length, "progressionsFound", "showAllProgressions");
+    matchStatus.hidden = !context;
+    matchStatus.textContent = context;
+    if (!progressions.length) {
+        results.appendChild(element("p", "empty", t(empty)));
+        return;
+    }
+
+    const visible = showAll ? progressions : progressions.slice(0, previewLimit);
+    visible.forEach(({ scale, chords, approximate }) => {
+        const card = element("article", "progression-card");
+        const heading = element("div", "progression-heading");
+        heading.appendChild(element("h3", "progression-key", scale.name));
+        if (approximate) heading.appendChild(element("span", "progression-key-hint", t("progressionApproximateKey")));
+        card.appendChild(heading);
+        const sequence = element("ol", "progression-chords");
+        chords.forEach(({ root, suffix, degree, pitches }) => {
+            const chord = element("li", "progression-chord");
+            // In minor, the unaltered scale degrees can also be written without the relative-major flats.
+            chord.appendChild(element("span", "progression-degree", NoteNames.sharpsOnly() ? degree.replace(/^♭/, "") : degree));
+            chord.appendChild(element("strong", "progression-chord-name", NoteNames.name(root) + suffix));
+            const notes = selected.filter(pitch => pitches.includes(pitch)).map(pitch => NoteNames.name(pitch)).join(" · ");
+            if (notes) {
+                const badge = element("span", "progression-notes", notes);
+                badge.title = t("progressionMatches", { notes });
+                chord.appendChild(badge);
+            }
+            sequence.appendChild(chord);
+        });
+        card.appendChild(sequence);
+        results.appendChild(card);
+    });
+}
+
 function renderResults() {
-    byId("matches-title").textContent = t(session.mode === "audio" ? "probableKeys" : "fittingScales");
+    const progressions = isProgressionView();
+    scaleResults.setAttribute("aria-pressed", String(!progressions));
+    progressionResults.setAttribute("aria-pressed", String(progressions));
     matchSection.hidden = session.mode !== "notes" && !matches.length;
+    matchStatus.classList.toggle("progression-context", progressions);
+    if (progressions) {
+        renderProgressions();
+        return;
+    }
+
+    prepareResultList(session.mode === "audio" ? "probableKeys" : "fittingScales", matches.length, "scalesFound", "showAllScales");
     const approximate = session.mode === "chords" && matches.length && matches[0].outside.length;
     matchStatus.hidden = !approximate;
     matchStatus.textContent = approximate ? t("closestScales") : "";
-    counter.textContent = matches.length;
-    counter.setAttribute("aria-label", t("scalesFound", { count: matches.length }));
-    results.textContent = "";
-    more.hidden = matches.length <= previewLimit;
-    more.textContent = showAll ? t("collapseScales") : t("showAllScales", { count: matches.length });
-    more.setAttribute("aria-expanded", String(showAll));
 
     if (!matches.length) {
         results.appendChild(element("p", "empty", t("noScalesForNotes")));
@@ -507,7 +624,7 @@ function changeMode(mode) {
     byId("note-search").hidden = !notes;
     byId("chosen-legend").hidden = !notes;
     workspace.insertBefore(instrumentPanel, notes ? matchPanel : null);
-    mainBoard.build(false, notes);
+    buildMainBoard(false);
     updateMatches();
 }
 
@@ -610,11 +727,16 @@ function updateChordInput() {
     if (session.chordAnalyzed) {
         session.chordAnalyzed = false;
         session.chordScale = null;
-        chordMatches = [];
+        setChordAnalysis([]);
         updateMatches();
     } else {
         persist();
     }
+}
+
+function setChordAnalysis(chords) {
+    analyzedChords = chords;
+    chordMatches = ChordFinder.match(chords);
 }
 
 chordInput.addEventListener("input", updateChordInput);
@@ -639,11 +761,23 @@ chordForm.addEventListener("submit", event => {
     }
     chordInput.blur();
     showChordError();
+    let submitted = chords;
+    if (NoteNames.sharpsOnly()) {
+        const mode = NoteNames.mode();
+        const rewritten = ChordFinder.rewrite(session.chordText, mode, mode, { force: true });
+        if (rewritten !== session.chordText) {
+            session.chordText = rewritten;
+            renderChordText();
+            submitted = ChordFinder.parse(rewritten).chords;
+        }
+    }
     session.chordAnalyzed = true;
-    chordMatches = ChordFinder.match(chords);
+    setChordAnalysis(submitted);
     updateMatches();
-    const query = chords.map(chord => chord.label).join(" · ");
-    recordSearch("chords", ChordFinder.rewrite(query, NoteNames.mode(), "international"), chordMatches);
+    const query = submitted.map(chord => chord.label).join(" · ");
+    const canonical = ChordFinder.rewrite(query, NoteNames.mode(), "international",
+        { sharpsOnly: false, force: NoteNames.sharpsOnly() });
+    recordSearch("chords", canonical, chordMatches);
     if (matchSection.getBoundingClientRect().top > window.innerHeight - 110) {
         matchSection.scrollIntoView({ block: "start" });
     }
@@ -652,6 +786,10 @@ chordForm.addEventListener("submit", event => {
 noteMode.addEventListener("click", () => changeMode("notes"));
 chordMode.addEventListener("click", () => changeMode("chords"));
 audioMode.addEventListener("click", () => changeMode("audio"));
+scaleResults.addEventListener("click", () => setResultView(false));
+progressionResults.addEventListener("click", () => setResultView(true));
+fretboardView.addEventListener("click", () => setPianoMode(false));
+pianoView.addEventListener("click", () => setPianoMode(true));
 audioRecord.addEventListener("click", () => {
     if (!audioBridge) return;
     NoteAudio.stop();
@@ -688,8 +826,29 @@ more.addEventListener("click", () => {
     if (!showAll) more.scrollIntoView({ block: "nearest" });
 });
 
+function buildMainBoard(resetScroll) {
+    const piano = session.pianoMode;
+    const interactive = session.mode === "notes";
+    mainFretboardSection.hidden = piano;
+    mainPianoSection.hidden = !piano;
+    fretboardView.setAttribute("aria-pressed", String(!piano));
+    pianoView.setAttribute("aria-pressed", String(piano));
+    byId("scale-picker-label").textContent = t(piano ? "pianoScale" : "fretboardScale");
+    if (piano) mainPiano.build(resetScroll, interactive);
+    else mainBoard.build(resetScroll, interactive);
+}
+
+function setPianoMode(enabled) {
+    if (session.pianoMode === enabled) return;
+    session.pianoMode = enabled;
+    persist();
+    refreshSetup(false);
+    renderSelection();
+    renderResults();
+}
+
 function refreshSetup(resetScroll) {
-    mainBoard.build(resetScroll, session.mode === "notes");
+    buildMainBoard(resetScroll);
     renderBoard();
 }
 
@@ -704,21 +863,29 @@ function refreshInterface(resetScroll = false) {
     renderAudioFile();
     if (historyDialog.open) renderHistory();
     if (!scaleView.hidden) {
-        const leadingFret = detailBoard.leadingFret();
         byId("detail-title").textContent = detailScale.name;
         byId("detail-pitches").textContent = pitchesOf(detailScale);
-        renderDetailFrets(Number(detailFrom.value), Number(detailTo.value));
-        detailBoard.scrollToFret(leadingFret);
+        if (session.pianoMode) {
+            detailPiano.build(false);
+            detailPiano.render(detailScale);
+        } else {
+            const leadingFret = detailBoard.leadingFret();
+            renderDetailFrets(Number(detailFrom.value), Number(detailTo.value));
+            detailBoard.scrollToFret(leadingFret);
+        }
     }
 }
 
 function refreshNotation(resetScroll = false) {
     const nextNotation = NoteNames.mode();
-    if (session.chordNotation !== nextNotation) {
-        session.chordText = ChordFinder.rewrite(session.chordText, session.chordNotation, nextNotation);
+    const nextSharps = NoteNames.sharpsOnly();
+    const sharpsChanged = session.chordSharps !== nextSharps;
+    if (session.chordNotation !== nextNotation || sharpsChanged) {
+        session.chordText = ChordFinder.rewrite(session.chordText, session.chordNotation, nextNotation, { force: sharpsChanged });
         session.chordNotation = nextNotation;
+        session.chordSharps = nextSharps;
         renderChordText();
-        if (session.chordAnalyzed) chordMatches = ChordFinder.match(ChordFinder.parse(session.chordText).chords);
+        if (session.chordAnalyzed) setChordAnalysis(ChordFinder.parse(session.chordText).chords);
         if (session.mode === "chords") selectMatches();
     }
     persist();
@@ -757,6 +924,7 @@ byId("settings-reset").addEventListener("click", () => {
         NoteAudio.updateVolume();
         session.detailFrom = 0;
         session.detailTo = null;
+        session.pianoMode = false;
         detailScrollFret = null;
         refreshNotation(true);
     });
@@ -783,4 +951,5 @@ FretSettings.init(refreshSetup, enabled => {
 renderAudioControls();
 renderAudioFile();
 changeMode(session.mode);
+document.documentElement.classList.remove("starting");
 if (audioBridge) audioBridge.ready();

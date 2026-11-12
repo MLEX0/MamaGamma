@@ -16,6 +16,16 @@ const NoteNames = (() => {
         japanese: ["ハ", "嬰ハ", "ニ", "変ホ", "ホ", "ヘ", "嬰ヘ", "ト", "変イ", "イ", "変ロ", "ロ"],
     };
     const ukrainianNames = ["До", "До♯", "Ре", "Мі♭", "Мі", "Фа", "Фа♯", "Соль", "Ля♭", "Ля", "Сі♭", "Сі"];
+    const sharpAlternatives = {
+        international: ["D♯", "G♯", "A♯"],
+        german: ["Dis", "Gis", "Ais"],
+        solfege: ["Re♯", "Sol♯", "La♯"],
+        cyrillic: ["Ре♯", "Соль♯", "Ля♯"],
+        japanese: ["嬰ニ", "嬰ト", "嬰イ"],
+    };
+    const sharpNames = Object.fromEntries(Object.entries(displayNames).map(([mode, names]) =>
+        [mode, withSharps(names, sharpAlternatives[mode])]));
+    const ukrainianSharpNames = withSharps(ukrainianNames, sharpAlternatives.cyrillic);
     const naturalPitches = [0, 2, 4, 5, 7, 9, 11];
     const international = naturalRoots(["C", "D", "E", "F", "G", "A", "B"]);
     const japanese = ["ハ", "ニ", "ホ", "ヘ", "ト", "イ", "ロ"];
@@ -44,6 +54,13 @@ const NoteNames = (() => {
         ])],
     ]);
     let current = "international";
+    let preferSharps = false;
+
+    function withSharps(names, alternatives) {
+        const result = names.slice();
+        [3, 8, 10].forEach((pitch, index) => { result[pitch] = alternatives[index]; });
+        return result;
+    }
 
     function naturalRoots(notes) {
         return notes.flatMap((note, index) => {
@@ -73,9 +90,12 @@ const NoteNames = (() => {
         return roots.get(mode) || roots.get("international");
     }
 
-    function names(mode = current) {
-        if (mode === "cyrillic" && typeof I18n !== "undefined" && I18n.language() === "uk") return ukrainianNames;
-        return roots.has(mode) ? displayNames[mode] : displayNames.international;
+    function names(mode = current, sharpsOnly = preferSharps) {
+        if (mode === "cyrillic" && typeof I18n !== "undefined" && I18n.language() === "uk") {
+            return sharpsOnly ? ukrainianSharpNames : ukrainianNames;
+        }
+        const table = sharpsOnly ? sharpNames : displayNames;
+        return roots.has(mode) ? table[mode] : table.international;
     }
 
     function setMode(mode) {
@@ -98,7 +118,9 @@ const NoteNames = (() => {
     return {
         systems, names, setMode, readRoots,
         mode: () => current,
-        name: (pitch, mode = current) => names(mode)[pitch],
+        sharpsOnly: () => preferSharps,
+        setSharpsOnly: enabled => { preferSharps = enabled === true; },
+        name: (pitch, mode = current, sharpsOnly = preferSharps) => names(mode, sharpsOnly)[pitch],
         rootPattern: mode => getProfile(mode).source,
     };
 })();

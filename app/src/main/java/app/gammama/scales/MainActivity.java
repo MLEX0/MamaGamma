@@ -338,17 +338,21 @@ public final class MainActivity extends Activity {
         if (path == null) return null;
         switch (path) {
             case "/index.html": return "text/html";
-            case "/styles.css": return "text/css";
+            case "/styles.css":
+            case "/piano.css": return "text/css";
             case "/brand.svg": return "image/svg+xml";
+            case "/startup.js":
             case "/locale-ui.js":
             case "/locale-search.js":
             case "/i18n.js":
             case "/notation.js":
             case "/scales.js":
+            case "/progressions.js":
             case "/chords.js":
             case "/settings.js":
             case "/note-audio.js":
             case "/fretboard.js":
+            case "/piano.js":
             case "/history.js":
             case "/app.js": return "text/javascript";
             default: return null;

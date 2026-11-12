@@ -74,13 +74,13 @@ const ChordFinder = (() => {
         return { chords, invalid: Array.from(new Set(invalid)) };
     }
 
-    function rewrite(text, fromMode, toMode) {
-        if (fromMode === toMode) return text;
+    function rewrite(text, fromMode, toMode, { sharpsOnly = NoteNames.sharpsOnly(), force = false } = {}) {
+        if (fromMode === toMode && !force) return text;
         return mapTokens(text, fromMode, (token, chord, wrapped) => {
             if (!chord) return token;
             const { text: label, root, rootLength, bass, bassStart } = chord;
-            const rootName = NoteNames.name(root, toMode);
-            const bassName = bass ? NoteNames.name(bass.pitch, toMode) + label.slice(bassStart + bass.length) : "";
+            const rootName = NoteNames.name(root, toMode, sharpsOnly);
+            const bassName = bass ? NoteNames.name(bass.pitch, toMode, sharpsOnly) + label.slice(bassStart + bass.length) : "";
             const rewritten = rootName + label.slice(rootLength, bassStart) + bassName;
             return wrapped ? "(" + rewritten + ")" : rewritten;
         });
