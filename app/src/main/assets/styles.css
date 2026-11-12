@@ -416,6 +416,7 @@ h2 { font-size: 17px; line-height: 1.2; letter-spacing: -.22px; font-weight: 750
     font: 600 12px/1 ui-monospace, Consolas, monospace;
 }
 .string-label[data-string="1"] { color: var(--board-muted); }
+.string-label.long-note { font-size: 10px; }
 .fret-scroll { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
 .fret-scroll::-webkit-scrollbar { display: none; }
 .frets { display: flex; }
@@ -471,6 +472,7 @@ h2 { font-size: 17px; line-height: 1.2; letter-spacing: -.22px; font-weight: 750
     font-weight: 650;
     line-height: 1;
 }
+.note-key.long-note { width: min(100% - 5px, 42px); font-size: 10px; }
 .note[data-state="scale"] .note-key {
     background: var(--scale-key);
     border-color: var(--scale-edge);
@@ -660,6 +662,7 @@ h2 { font-size: 17px; line-height: 1.2; letter-spacing: -.22px; font-weight: 750
 .board-only .detail-board .strings { background: transparent; }
 .board-only .detail-board .string-heading { visibility: hidden; }
 .board-only .detail-board .string-label { color: var(--board-muted); font-size: 11px; }
+.board-only .detail-board .string-label.long-note { font-size: 10px; }
 .board-only .detail-board .note-key { height: clamp(27px, 8vh, 42px); }
 .detail-pitches { margin-top: 3px; font-size: 14px; color: var(--muted); line-height: 1.3; }
 .detail-back {
@@ -711,6 +714,7 @@ h2 { font-size: 17px; line-height: 1.2; letter-spacing: -.22px; font-weight: 750
 .detail-board .double-marker { font-weight: 800; color: var(--root-key); }
 .detail-board .note, .detail-board .string-label { flex: 1 0 var(--string-height); }
 .detail-board .note-key { width: calc(100% - 5px); max-width: 46px; height: clamp(23px, 4.8vw, 33px); border-radius: 6px; font-size: clamp(11px, 3.3vw, 16px); }
+.detail-board .note-key.long-note { font-size: clamp(8px, 1.7vw, 12px); }
 .detail-board .note[data-state="root"] .note-key { outline-offset: 1px; }
 .detail-board .legend { font-size: 12px; padding-block: 7px; }
 .settings-header, .settings-footer { display: flex; align-items: center; padding: 10px 16px; }

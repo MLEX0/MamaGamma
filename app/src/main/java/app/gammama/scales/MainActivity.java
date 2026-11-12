@@ -343,6 +343,7 @@ public final class MainActivity extends Activity {
             case "/locale-ui.js":
             case "/locale-search.js":
             case "/i18n.js":
+            case "/notation.js":
             case "/scales.js":
             case "/chords.js":
             case "/settings.js":

@@ -1,7 +1,6 @@
 "use strict";
 
 const ChordFinder = (() => {
-    const roots = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
     const formulas = {
         "": [0, 4, 7], m: [0, 3, 7], "5": [0, 7], dim: [0, 3, 6], aug: [0, 4, 8],
         sus2: [0, 2, 7], sus4: [0, 5, 7], "7sus2": [0, 2, 7, 10], "7sus4": [0, 5, 7, 10],
@@ -15,11 +14,6 @@ const ChordFinder = (() => {
     };
     const aliases = { maj: "", sus: "sus4", "7sus": "7sus4", "69": "6/9", "m6/9": "m69", "ø": "m7b5", "ø7": "m7b5" };
     const alterations = { b5: [7, 6], "#5": [7, 8], b9: [2, 1], "#9": [2, 3], "#11": [5, 6], b13: [9, 8] };
-
-    function pitch(note) {
-        const accidental = note[1] === "#" ? 1 : note[1] === "b" ? -1 : 0;
-        return (roots[note[0].toUpperCase()] + accidental + 12) % 12;
-    }
 
     function chordIntervals(suffix) {
         const quality = suffix.replace(/[()]/g, "")
@@ -35,31 +29,61 @@ const ChordFinder = (() => {
         return formulas[altered[1]].filter(interval => interval !== natural).concat(replacement);
     }
 
-    function parseChord(label) {
-        const token = label.replace(/♯/g, "#").replace(/♭/g, "b").replace(/−/g, "-");
-        const parts = token.match(/^([A-Ga-g][#b]?)(.*?)(?:\/([A-Ga-g][#b]?))?$/);
-        if (!parts) return null;
-        const [, note, suffix, bass] = parts;
-        const intervals = chordIntervals(suffix);
-        if (!intervals) return null;
-        const root = pitch(note);
-        const pitches = new Set(intervals.map(interval => ScaleFinder.pitchAt(root, interval)));
-        if (bass) pitches.add(pitch(bass));
-        return { label, root, pitches: Array.from(pitches), dominant: intervals.includes(4) && intervals.includes(10) };
+    function parseChord(label, mode) {
+        const slash = label.lastIndexOf("/");
+        const afterSlash = slash === -1 ? "" : label.slice(slash + 1);
+        const bassText = afterSlash.trim();
+        const bass = NoteNames.readRoots(bassText, mode).find(note => note.length === bassText.length);
+        // A longer note name can overlap a chord suffix, as in Asus4 in German notation.
+        for (const root of NoteNames.readRoots(label, mode)) {
+            const suffix = label.slice(root.length, bass ? slash : label.length)
+                .trim().replace(/\s*\/\s*/g, "/").replace(/♯/g, "#").replace(/♭/g, "b").replace(/−/g, "-");
+            const intervals = chordIntervals(suffix);
+            if (!intervals) continue;
+            const pitches = new Set(intervals.map(interval => ScaleFinder.pitchAt(root.pitch, interval)));
+            if (bass) pitches.add(bass.pitch);
+            return {
+                label: label.replace(/\s*\/\s*/g, "/"), text: label, root: root.pitch,
+                pitches: [...pitches], dominant: intervals.includes(4) && intervals.includes(10),
+                rootLength: root.length, bass,
+                bassStart: bass ? slash + 1 + afterSlash.length - afterSlash.trimStart().length : label.length,
+            };
+        }
+        return null;
     }
 
-    function parse(text) {
-        const tokens = text.replace(/\s*\/\s*/g, "/").replace(/-(?=[A-Ga-g])/g, " ")
-            .split(/[\s,;|:–—\[\]{}]+/).filter(token => token && token !== "-");
+    function mapTokens(text, mode, transform) {
+        const hyphenSeparator = new RegExp("([-−](?=(?:" + NoteNames.rootPattern(mode) + ")))", "iu");
+        return text.replace(/(?:[^/\s,;|:–—\[\]{}·・、，｜]+|\s*\/\s*)+/gu, chunk =>
+            chunk.split(hyphenSeparator).map((token, index) => {
+                if (index % 2 || !token || token === "-" || token === "−") return token;
+                const wrapped = token.startsWith("(") && token.endsWith(")");
+                const label = wrapped ? token.slice(1, -1) : token;
+                return transform(token, parseChord(label, mode), wrapped);
+            }).join(""));
+    }
+
+    function parse(text, mode = NoteNames.mode()) {
         const chords = [];
         const invalid = [];
-        tokens.forEach(token => {
-            const label = token.startsWith("(") && token.endsWith(")") ? token.slice(1, -1) : token;
-            const chord = parseChord(label);
+        mapTokens(text, mode, (token, chord) => {
             if (chord) chords.push(chord);
             else invalid.push(token);
+            return token;
         });
         return { chords, invalid: Array.from(new Set(invalid)) };
+    }
+
+    function rewrite(text, fromMode, toMode) {
+        if (fromMode === toMode) return text;
+        return mapTokens(text, fromMode, (token, chord, wrapped) => {
+            if (!chord) return token;
+            const { text: label, root, rootLength, bass, bassStart } = chord;
+            const rootName = NoteNames.name(root, toMode);
+            const bassName = bass ? NoteNames.name(bass.pitch, toMode) + label.slice(bassStart + bass.length) : "";
+            const rewritten = rootName + label.slice(rootLength, bassStart) + bassName;
+            return wrapped ? "(" + rewritten + ")" : rewritten;
+        });
     }
 
     function match(chords) {
@@ -93,5 +117,5 @@ const ChordFinder = (() => {
         return scales.filter(scale => scale.outside.length === best.outside.length && scale.missing <= best.missing + (best.missing ? 1 : 0));
     }
 
-    return { parse, match };
+    return { parse, match, rewrite };
 })();

@@ -1,7 +1,7 @@
 "use strict";
 
 const ScaleFinder = (() => {
-    const pitchNames = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
+    const pitchNames = NoteNames.names("international");
     const families = [
         ["major", "scaleMajor", [0, 2, 4, 5, 7, 9, 11]],
         ["minor", "scaleMinor", [0, 2, 3, 5, 7, 8, 10]],
@@ -22,10 +22,10 @@ const ScaleFinder = (() => {
     }
 
     const catalog = [];
-    pitchNames.forEach((note, root) => {
+    pitchNames.forEach((_, root) => {
         families.forEach(([id, name, intervals]) => {
             const pitches = intervals.map(interval => pitchAt(root, interval));
-            catalog.push({ id: `${root}-${id}`, get name() { return t(name, { note }); }, root, pitches, order: catalog.length });
+            catalog.push({ id: `${root}-${id}`, get name() { return t(name, { note: NoteNames.name(root) }); }, root, pitches, order: catalog.length });
         });
     });
 

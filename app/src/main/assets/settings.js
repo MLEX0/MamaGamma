@@ -51,6 +51,7 @@ const FretSettings = (() => {
 
     const themeOptions = document.getElementById("theme-options");
     const languagePicker = document.getElementById("language-picker");
+    const noteSystemPicker = document.getElementById("note-system-picker");
     const soundSwitch = document.getElementById("note-sound");
     const volumeSlider = document.getElementById("note-volume");
     const volumeValue = document.getElementById("note-volume-value");
@@ -66,6 +67,7 @@ const FretSettings = (() => {
     const appearance = window.GammaMamaAppearance;
     let state = restore();
     I18n.setMode(state.language);
+    NoteNames.setMode(state.noteSystem);
 
     function restore() {
         let saved;
@@ -97,7 +99,8 @@ const FretSettings = (() => {
         });
         const volume = Number.isInteger(saved.volume) && saved.volume >= 0 && saved.volume <= 100 ? saved.volume : 100;
         const language = I18n.languages.some(item => item.id === saved.language) ? saved.language : "system";
-        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", language, sound: saved.sound !== false, volume, setups };
+        const noteSystem = NoteNames.systems.some(item => item.id === saved.noteSystem) ? saved.noteSystem : "international";
+        return { instrument: instrument.id, theme: themes.includes(theme) ? theme : "system", language, noteSystem, sound: saved.sound !== false, volume, setups };
     }
 
     function persist() {
@@ -161,7 +164,7 @@ const FretSettings = (() => {
             select.className = "settings-select";
             select.dataset.stringIndex = index;
             select.setAttribute("aria-label", t(courses ? "stringPairNumber" : "stringNumber", { number: index + 1 }));
-            pitchNames.forEach((name, value) => select.add(new Option(name, value)));
+            NoteNames.names().forEach((name, value) => select.add(new Option(name, value)));
             select.value = String(pitch);
             label.appendChild(number);
             label.appendChild(select);
@@ -198,6 +201,8 @@ const FretSettings = (() => {
         renderVolume();
         options(languagePicker, [{ id: "system", name: "systemLanguage" }, ...I18n.languages]);
         languagePicker.value = state.language;
+        options(noteSystemPicker, NoteNames.systems.map(({ id, label }) => ({ id, name: label })));
+        noteSystemPicker.value = state.noteSystem;
         options(instrumentPicker, instruments);
         instrumentPicker.value = state.instrument;
         renderSetup();
@@ -210,13 +215,13 @@ const FretSettings = (() => {
 
     function reset() {
         state = readSettings({}, "system");
-        const languageChanged = I18n.setMode(state.language);
+        I18n.setMode(state.language);
+        NoteNames.setMode(state.noteSystem);
         renderSettings();
         persist();
-        return languageChanged;
     }
 
-    function init(onSetupChange, onSoundChange, onVolumeChange, onPreview, onLanguageChange) {
+    function init(onSetupChange, onSoundChange, onVolumeChange, onPreview, onLanguageChange, onNotationChange) {
         if (!appearance && systemTheme.addEventListener) systemTheme.addEventListener("change", applyTheme);
         languagePicker.addEventListener("change", () => {
             state.language = languagePicker.value;
@@ -224,6 +229,14 @@ const FretSettings = (() => {
             if (changed) {
                 renderSettings();
                 onLanguageChange();
+            }
+            persist();
+        });
+        noteSystemPicker.addEventListener("change", () => {
+            state.noteSystem = noteSystemPicker.value;
+            if (NoteNames.setMode(state.noteSystem)) {
+                renderStrings();
+                onNotationChange();
             }
             persist();
         });

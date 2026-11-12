@@ -1,7 +1,7 @@
 "use strict";
 
 function createFretboard(section, togglePitch) {
-    const { pitchNames, pitchAt } = ScaleFinder;
+    const { pitchAt } = ScaleFinder;
     const markers = new Set([0, 3, 5, 7, 9]);
     const grid = section.querySelector(".fretboard");
     const strings = section.querySelector(".strings");
@@ -22,6 +22,7 @@ function createFretboard(section, togglePitch) {
         const position = scroll.scrollLeft;
         const instrument = FretSettings.instrument();
         const { pitches: tuning, midi, frets: fretCount } = FretSettings.setup();
+        const pitchNames = NoteNames.names();
         const { from = 0, to = fretCount } = bounds;
         firstFret = from;
         if (rangeView) frets.style.setProperty("--fret-columns", Math.min(13, to - from + 1));
@@ -38,6 +39,7 @@ function createFretboard(section, togglePitch) {
         strings.appendChild(element("span", "string-heading", t(instrument.courses ? "stringPairShort" : "stringShort")));
         tuning.forEach((openPitch, index) => {
             const label = element("span", "string-label", pitchNames[openPitch]);
+            label.classList.toggle("long-note", pitchNames[openPitch].length > 3);
             label.dataset.string = index + 1;
             strings.appendChild(label);
         });
@@ -62,7 +64,9 @@ function createFretboard(section, togglePitch) {
                     if (interactive) togglePitch(pitch);
                 });
                 cell.dataset.string = index + 1;
-                cell.appendChild(element("span", "note-key", pitchNames[pitch]));
+                const key = element("span", "note-key", pitchNames[pitch]);
+                key.classList.toggle("long-note", pitchNames[pitch].length > 3);
+                cell.appendChild(key);
                 column.appendChild(cell);
                 notes.push({ cell, pitch, label });
             });

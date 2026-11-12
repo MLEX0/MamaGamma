@@ -28,6 +28,7 @@ const audioStatusKeys = {
 };
 const chordForm = byId("chord-search");
 const chordInput = byId("chord-input");
+const chordTextLimit = chordInput.maxLength;
 const chordError = byId("chord-error");
 const resetChords = byId("reset-chords");
 const picker = byId("scale-picker");
@@ -83,6 +84,9 @@ function restore() {
     }
     saved = saved || {};
     const pitches = Array.isArray(saved.selected) ? saved.selected : [];
+    const savedChordText = typeof saved.chordText === "string" ? saved.chordText : "";
+    const savedNotation = NoteNames.systems.find(system => system.id === saved.chordNotation)?.id || "international";
+    const chordNotation = NoteNames.mode();
     return {
         selected: Array.from(new Set(pitches.filter(pitch => Number.isInteger(pitch) && pitch >= 0 && pitch < 12))),
         pinnedScale: saved.pinnedScale || null,
@@ -93,7 +97,8 @@ function restore() {
         detailFrom: Number.isInteger(saved.detailFrom) && saved.detailFrom >= 0 ? saved.detailFrom : 0,
         detailTo: Number.isInteger(saved.detailTo) && saved.detailTo >= 0 ? saved.detailTo : null,
         mode: ["notes", "chords", "audio"].includes(saved.mode) ? saved.mode : "notes",
-        chordText: typeof saved.chordText === "string" ? saved.chordText.slice(0, chordInput.maxLength) : "",
+        chordText: ChordFinder.rewrite(savedChordText, savedNotation, chordNotation),
+        chordNotation,
         chordAnalyzed: saved.chordAnalyzed === true,
     };
 }
@@ -208,7 +213,7 @@ function renderHistory() {
         time.dateTime = date.toISOString();
         heading.append(element("strong", "", SearchHistory.sourceName(entry.source)), time);
         row.appendChild(heading);
-        if (entry.input) row.appendChild(element("p", "history-input", entry.input));
+        if (entry.input) row.appendChild(element("p", "history-input", historyInput(entry)));
         const scales = element("div", "history-scales");
         entry.scales.map(id => scaleCatalog.get(id)).filter(Boolean).forEach(scale => {
             const button = element("button", "secondary-button", scale.name);
@@ -222,6 +227,15 @@ function renderHistory() {
         row.appendChild(scales);
         list.appendChild(row);
     });
+}
+
+function historyInput(entry) {
+    if (entry.source === "chords") return ChordFinder.rewrite(entry.input, "international", NoteNames.mode());
+    if (entry.source !== "notes") return entry.input;
+    return entry.input.split(" · ").map(name => {
+        const pitch = pitchNames.indexOf(name);
+        return pitch < 0 ? name : NoteNames.name(pitch);
+    }).join(" · ");
 }
 
 function recordSearch(source, input, scales) {
@@ -239,7 +253,7 @@ function flushNotesHistory(preview = activeScale) {
 }
 
 function pitchesOf(scale) {
-    return scale.pitches.map(pitch => pitchNames[pitch]).join(" · ");
+    return scale.pitches.map(pitch => NoteNames.name(pitch)).join(" · ");
 }
 
 function togglePitch(pitch) {
@@ -258,7 +272,7 @@ function pinnedKey() {
     return session.mode === "notes" ? "pinnedScale" : "chordScale";
 }
 
-function updateMatches() {
+function selectMatches() {
     if (session.mode === "audio") matches = session.audioKeys.map(id => scaleCatalog.get(id));
     else matches = session.mode === "notes" ? match(session.selected) : chordMatches;
     const key = pinnedKey();
@@ -268,6 +282,10 @@ function updateMatches() {
         activeScale = matches[0] || null;
     }
     workspace.classList.toggle("has-scale", Boolean(activeScale));
+}
+
+function updateMatches() {
+    selectMatches();
     showAll = false;
     persist();
     renderPicker();
@@ -391,9 +409,10 @@ function renderSelection() {
         return;
     }
     session.selected.forEach(pitch => {
-        const chip = element("button", "selected-chip", pitchNames[pitch]);
+        const name = NoteNames.name(pitch);
+        const chip = element("button", "selected-chip", name);
         chip.type = "button";
-        chip.setAttribute("aria-label", t("removeNote", { note: pitchNames[pitch] }));
+        chip.setAttribute("aria-label", t("removeNote", { note: name }));
         const remove = element("span", "", "×");
         remove.setAttribute("aria-hidden", "true");
         chip.appendChild(remove);
@@ -556,7 +575,11 @@ function updateAudioSearch(phase, keys, message, file) {
 }
 
 function renderChordError() {
-    const message = chordValidation ? t(chordValidation.key, chordValidation.params) : "";
+    const message = chordValidation ? t(chordValidation.key, {
+        minorChord: `${NoteNames.name(9)}m`,
+        seventhChord: `${NoteNames.name(7)}7`,
+        ...chordValidation.params,
+    }) : "";
     chordError.textContent = message;
     chordError.hidden = !message;
     chordInput.setAttribute("aria-invalid", String(Boolean(message)));
@@ -567,8 +590,18 @@ function showChordError(key, params) {
     renderChordError();
 }
 
-chordInput.value = session.chordText;
-resetChords.disabled = !chordInput.value;
+function renderChordText() {
+    chordInput.maxLength = Math.max(chordTextLimit, session.chordText.length);
+    chordInput.value = session.chordText;
+    resetChords.disabled = !chordInput.value;
+}
+
+function renderChordPlaceholder() {
+    chordInput.placeholder = [NoteNames.name(0), NoteNames.name(7), `${NoteNames.name(9)}m`, NoteNames.name(5)].join(" – ");
+}
+
+renderChordText();
+renderChordPlaceholder();
 
 function updateChordInput() {
     session.chordText = chordInput.value;
@@ -609,7 +642,8 @@ chordForm.addEventListener("submit", event => {
     session.chordAnalyzed = true;
     chordMatches = ChordFinder.match(chords);
     updateMatches();
-    recordSearch("chords", chords.map(chord => chord.label).join(" · "), chordMatches);
+    const query = chords.map(chord => chord.label).join(" · ");
+    recordSearch("chords", ChordFinder.rewrite(query, NoteNames.mode(), "international"), chordMatches);
     if (matchSection.getBoundingClientRect().top > window.innerHeight - 110) {
         matchSection.scrollIntoView({ block: "start" });
     }
@@ -659,11 +693,12 @@ function refreshSetup(resetScroll) {
     renderBoard();
 }
 
-function refreshLanguage(resetScroll = false) {
+function refreshInterface(resetScroll = false) {
     refreshSetup(resetScroll);
     renderPicker();
     renderSelection();
     renderResults();
+    renderChordPlaceholder();
     renderChordError();
     renderAudioControls();
     renderAudioFile();
@@ -671,9 +706,23 @@ function refreshLanguage(resetScroll = false) {
     if (!scaleView.hidden) {
         const leadingFret = detailBoard.leadingFret();
         byId("detail-title").textContent = detailScale.name;
+        byId("detail-pitches").textContent = pitchesOf(detailScale);
         renderDetailFrets(Number(detailFrom.value), Number(detailTo.value));
         detailBoard.scrollToFret(leadingFret);
     }
+}
+
+function refreshNotation(resetScroll = false) {
+    const nextNotation = NoteNames.mode();
+    if (session.chordNotation !== nextNotation) {
+        session.chordText = ChordFinder.rewrite(session.chordText, session.chordNotation, nextNotation);
+        session.chordNotation = nextNotation;
+        renderChordText();
+        if (session.chordAnalyzed) chordMatches = ChordFinder.match(ChordFinder.parse(session.chordText).chords);
+        if (session.mode === "chords") selectMatches();
+    }
+    persist();
+    refreshInterface(resetScroll);
 }
 
 function previewVolume() {
@@ -703,15 +752,13 @@ for (const dialog of document.querySelectorAll("dialog")) {
 byId("settings-open").addEventListener("click", () => showDialog(settingsDialog));
 byId("settings-reset").addEventListener("click", () => {
     confirmAction("resetSettingsTitle", "resetSettingsDescription", "resetSettingsAction", () => {
-        const languageChanged = FretSettings.reset();
+        FretSettings.reset();
         NoteAudio.stop();
         NoteAudio.updateVolume();
         session.detailFrom = 0;
         session.detailTo = null;
         detailScrollFret = null;
-        persist();
-        if (languageChanged) refreshLanguage(true);
-        else refreshSetup(true);
+        refreshNotation(true);
     });
 });
 historyOpen.addEventListener("click", () => {
@@ -732,7 +779,7 @@ historyClear.addEventListener("click", () => {
 FretSettings.init(refreshSetup, enabled => {
     if (!enabled) NoteAudio.stop();
     renderBoard();
-}, NoteAudio.updateVolume, previewVolume, refreshLanguage);
+}, NoteAudio.updateVolume, previewVolume, refreshInterface, refreshNotation);
 renderAudioControls();
 renderAudioFile();
 changeMode(session.mode);

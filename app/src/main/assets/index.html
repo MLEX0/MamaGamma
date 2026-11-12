@@ -9,6 +9,7 @@
     <script src="locale-ui.js" defer></script>
     <script src="locale-search.js" defer></script>
     <script src="i18n.js" defer></script>
+    <script src="notation.js" defer></script>
     <script src="scales.js" defer></script>
     <script src="chords.js" defer></script>
     <script src="settings.js" defer></script>
@@ -194,6 +195,11 @@
                 <select id="language-picker" class="settings-select">
                     <option value="system" data-i18n="systemLanguage">Язык системы</option>
                 </select>
+            </div>
+
+            <div class="settings-field">
+                <label for="note-system-picker" data-i18n="notationLabel">Названия нот</label>
+                <select id="note-system-picker" class="settings-select"></select>
             </div>
 
             <label class="sound-setting" for="note-sound">
